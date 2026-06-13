@@ -11,7 +11,7 @@
             margin: 0; padding: 0; font-family: Arial, sans-serif;
             background-image: url('background.png'); background-size: cover;
             background-position: center; background-repeat: no-repeat;
-            background-attachment: fixed; display: flex; justify-content: center; min-height: 100vh;
+            background-attachment: fixed; display: flex; justify-content: center; min-height: 100vh; margin: 0 auto;
         }
         
         .app-container {
@@ -84,33 +84,49 @@
         .page.active { display: flex; }
         
         /* Сетка игроков */
-        .players-grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 12px; 
-            width: 100%; 
-            padding: 0 10px; 
-            position: relative;
-            z-index: 50; 
-            margin-top: 20px;
-        }
-        
+.players-grid {
+    display: grid;
+    
+    /* ИСПРАВЛЯЕМ ТУТ: Колонки теперь ЖЁСТКО по 104px, они физически не смогут растянуться */
+    grid-template-columns: repeat(3, 104px); 
+    
+    /* Автоматически распределяем колонки по центру, а лишнее место пускаем на gap */
+    justify-content: center; 
+    gap: 18px; 
+    
+    width: 100%;
+    max-width: 380px; 
+    margin: 20px auto 0 auto; 
+    padding: 0 10px;
+    position: relative;
+    z-index: 50;
+}
         /* Карточка игрока */
-        .player-card {
-            background-image: url('image_player_card.png'); 
-            background-size: 100% 100%;
-            background-position: center;
-            background-repeat: no-repeat;
-            aspect-ratio: 104/151; 
-            width: 100%;
-            position: relative;
-            display: flex; 
-            flex-direction: column; 
-            justify-content: space-between;
-            align-items: center; 
-            cursor: pointer;
-            filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.25));
-        }
+.player-card {
+    background-image: url('image_player_card.png');
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    
+    /* Фиксируем размеры намертво со всех сторон */
+    width: 104px;
+    min-width: 104px;
+    max-width: 104px;
+    height: 191px;
+    min-height: 191px;
+    max-height: 191px;
+    
+    /* Защита от искажений из-за внутренних элементов */
+    box-sizing: border-box; 
+    
+    margin: 0 auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.25));
+}
         .player-name-badge { 
             position: absolute;
             top: 7px; left: 0; right: 0;
@@ -126,11 +142,28 @@ right: 0;
         }
         
         /* Нижнее меню навигации */
-        .bottom-nav { 
-            position: absolute; bottom: 0px; left: 5%; width: 90%; height: 65px; 
-            display: flex; justify-content: space-between; align-items: center; z-index: 150;
-        }
-        .nav-btn { width: 28%; height: 100%; cursor: pointer; }
+.bottom-nav {
+    /* МЕНЯЕМ НА FIXED, чтобы меню замерло на экране телефона */
+    position: fixed; 
+    bottom: 0px; 
+    
+    /* Центрируем панель, чтобы на мониторе она не улетала */
+    left: 50%;
+    transform: translateX(-50%);
+    
+    width: 100%; 
+    max-width: 420px; /* Ограничиваем ширину под твой "экран смартфона" */
+    height: 65px;
+    
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    z-index: 150; 
+}
+
+
+
+        .nav-btn { width:50%; height: 100%; cursor: pointer; }
         .nav-btn img { width: 100%; height: 100%; object-fit: contain; }
         
         /* Шторка подсчета */
