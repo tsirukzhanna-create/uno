@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNO Counter</title>
+    <style>
+        * { box-sizing: border-box; user-select: none; }
+        body {
+            margin: 0; padding: 0; font-family: Arial, sans-serif;
+            background-image: url('background.png'); background-size: cover;
+            background-position: center; background-repeat: no-repeat;
+            background-attachment: fixed; display: flex; justify-content: center; min-height: 100vh;
+        }
+        
+        .app-container {
+            width: 100%; max-width: 420px; height: 100vh;
+            display: flex; flex-direction: column; justify-content: flex-start;
+            position: relative; overflow: hidden; background: rgba(0,0,0,0.1);
+        }
+        
+        /* ГЛАВНАЯ ПЛАШКА ВЫБОРА ИГРЫ */
+        .game-version-deck { 
+            width: calc(100% - 30px); 
+            max-width: 380px; 
+            height: 1030px;                 
+            margin: -930px auto 15px auto;
+            position: relative; 
+            z-index: 300; 
+            transition: opacity 0.2s ease;
+        }
+        
+        .version-card {
+            position: absolute;
+            width: 100%;
+            left: 0;
+            top: 0;
+            cursor: pointer;
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+            opacity: 0;
+            z-index: 10;
+        }
+        .version-card img { width: 100%; display: block; }
+        
+        /* Активная карта в закрытом состоянии */
+        .version-card.active-deck { 
+            z-index: 40; 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
+        
+        /* При раскрытии меню */
+        .game-version-deck.expanded { 
+            z-index: 400; 
+        }
+        .game-version-deck.expanded .version-card { 
+            opacity: 1; 
+        }
+        
+        .game-version-deck.expanded .version-card[data-version="UNO"] { transform: translateY(250px); z-index: 10; }
+        .game-version-deck.expanded .version-card[data-version="UNO Dos"] { transform: translateY(130px); z-index: 20; }
+        .game-version-deck.expanded .version-card[data-version="UNO Flip"] { transform: translateY(10px); z-index: 40; }
+        
+        /* КОНТЕЙНЕРЫ СТРАНИЦ */
+        .page { 
+            display: none; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 0 15px 90px 15px; 
+            flex: 1;
+            width: 100%;
+            overflow-y: auto; 
+            scrollbar-width: none; 
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+        .page::-webkit-scrollbar { display: none; }
+        .page.active { display: flex; }
+        
+        /* Сетка игроков */
+        .players-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 12px; 
+            width: 100%; 
+            padding: 0 10px; 
+            position: relative;
+            z-index: 50; 
+            margin-top: 20px;
+        }
+        
+        /* Карточка игрока */
+        .player-card {
+            background-image: url('image_player_card.png'); 
+            background-size: 100% 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            aspect-ratio: 104/151; 
+            width: 100%;
+            position: relative;
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between;
+            align-items: center; 
+            cursor: pointer;
+            filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.25));
+        }
+        .player-name-badge { 
+            position: absolute;
+            top: 7px; left: 0; right: 0;
+            color: #E50000; font-size: 15px; font-weight: bold; text-align: center; padding: 0 5px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .player-score { 
+            position: absolute; bottom: 5px; left: 0;
+
+
+right: 0; 
+            text-align: center; color: #E50000; font-size: 20px; font-weight: bold; 
+        }
+        
+        /* Нижнее меню навигации */
+        .bottom-nav { 
+            position: absolute; bottom: 0px; left: 5%; width: 90%; height: 65px; 
+            display: flex; justify-content: space-between; align-items: center; z-index: 150;
+        }
+        .nav-btn { width: 28%; height: 100%; cursor: pointer; }
+        .nav-btn img { width: 100%; height: 100%; object-fit: contain; }
+        
+        /* Шторка подсчета */
+        .modal-overlay-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;      
+            background-color: rgba(0, 0, 0, 0.5); z-index: 999; 
+            display: none; 
+        }
+        .modal-overlay-bg.open { display: block; }
+        
+        .bottom-sheet {
+            position: absolute; bottom: 0; left: 0; right: 0; 
+            background-image: url('vibor_card.png'); 
+            background-size: 100% 100%; 
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: transparent;
+            height: 540px;
+            max-height: 85vh;
+            padding: 95px 25px 20px 25px;
+            transform: translateY(100%); 
+            transition: transform 0.3s ease-out; 
+            z-index: 1000; 
+            display: flex; 
+            flex-direction: column;
+        }
+        .bottom-sheet.open { transform: translateY(0); }
+        
+        .calc-player-badge {
+            position: absolute; background: transparent; border: none;
+            font-size: 24px; font-weight: bold; color: #09BC00; text-align: center;
+            top: 42px; left: 40px; width: 160px; z-index: 1010;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .calc-score-badge {
+            position: absolute; background: transparent; border: none;
+            font-size: 24px; font-weight: bold; color: #09BC00; text-align: center;
+            top: 42px; right: 65px; width: 90px; z-index: 1010;
+        }
+        
+        .btn-confirm-round { 
+            position: absolute; cursor: pointer; filter: drop-shadow(0px 3px 5px rgba(0,0,0,0.3));
+            z-index: 1020; bottom: 15px; right: 45px; width: 60px; height: 60px;         
+        }
+        
+        /* Стилизация кнопки переключения стороны Flip */
+        .btn-flip-side {
+            position: absolute; top: 465px; left: 45px; width: 65px; height: 65px;
+            cursor: pointer; z-index: 1020; display: none;
+        }
+        
+        .cards-scroll-area { 
+            overflow-y: auto; overflow-x: hidden; flex-grow: 1; margin-bottom: 65px; padding: 5px; scrollbar-width: none; 
+        }
+        .cards-scroll-area::-webkit-scrollbar { display: none; }
+        
+        .uno-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; width: 100%; margin: 0 auto; }
+        .uno-card-item { position: relative; aspect-ratio: 2/3; background: transparent; cursor: pointer; }
+        .uno-card-item img { width: 100%; height: 100%; object-fit: contain; }
+        
+        .uno-card-counter { 
+            position: absolute; top: -6px; right: -6px; background-image: url('kolvo_card.png'); background-size: 100% 100%;
+            background-position: center; background-repeat: no-repeat; color: #09BC00; font-size: 12px; font-weight: bold; 
+            width: 26px; height: 26px; display: none; justify-content: center; align-items: center; z-index: 5; text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
+        }
+        .uno-card-counter.active { display: flex; }
+        
+        /* Вкладка рейтинга */
+        .rating-scroll-container { width: 100%; display: flex; flex-direction: column; gap: 12px; padding: 10px 5px; margin-top: 15px; }
+        .rating-player-row {
+            width: 100%; height: 75px; background-size: 100% 100%; background-repeat: no-repeat; background-position: center;
+            display: flex; justify-content: space-between; al
+
+
+ign-items: center; padding: 0 30px; font-weight: bold; font-size: 18px; color: white;
+        }
+        .rank-1 { background-image: url('frame_player_gold.png'); }
+        .rank-2 { background-image: url('frame_player_silver.png'); }
+        .rank-3 { background-image: url('frame_player_copper.png'); }
+        .rank-other { background-image: url('frame_player.png'); }
+        .rating-points { color: #fff; font-size: 20px; }
+    </style>
+</head>
+
+<body>
+<div class="app-container">
+    
+    <div id="version-deck-container" class="game-version-deck">
+        <div id="card-uno" class="version-card active-deck" data-version="UNO"><img src="text_current_version.png" alt="UNO"></div>
+        <div id="card-flip" class="version-card" data-version="UNO Flip"><img src="flip.png" alt="UNO Flip"></div>
+        <div id="card-dos" class="version-card" data-version="UNO Dos"><img src="dos.png" alt="UNO Dos"></div>
+    </div>
+
+    <div id="page-game" class="page active" style="padding-top: 120px;">
+        <div class="players-grid" id="players-list-target"></div>
+    </div>
+
+    <div id="page-rating" class="page">
+        <h2 style="color: white; margin-top: 20px; text-align: center;">Общий рейтинг</h2>
+        <div id="rating-list-target" class="rating-scroll-container"></div>
+    </div>
+
+    <div id="page-settings" class="page">
+        <h2 style="color: white; margin-top: 20px; text-align: center;">Настройки</h2>
+        <p style="color: #aaa; text-align: center;">Тут можно будет добавлять или удалять друзей.</p>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-btn" id="btn-game"><img src="button_start.png" alt="Игра"></div>
+        <div class="nav-btn" id="btn-rating"><img src="button_leaderboard.png" alt="Рейтинг"></div>
+        <div class="nav-btn" id="btn-settings"><img src="button_settings.png" alt="Настройки"></div>
+    </div>
+
+    <div id="modal-overlay" class="modal-overlay-bg">
+        <div id="sheet-cards" class="bottom-sheet">
+            <div id="flip-side-btn" class="btn-flip-side">
+                <img src="image_flip_btn.png" alt="Flip" style="width:100%; height:100%;">
+            </div>
+            <div id="modal-player-title" class="calc-player-badge">Игрок</div>
+            <div id="modal-live-score" class="calc-score-badge">+0</div>
+            <div class="cards-scroll-area">
+                <div id="cards-grid-target" class="uno-cards-grid"></div>
+            </div>
+            <img src="button_ok.png" class="btn-confirm-round" id="btn-confirm" alt="OK">
+        </div>
+    </div>
+</div>
+
+<script>
+// Ждем загрузки DOM перед выполнением скрипта
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Глобальные переменные
+    var curPlayerId = null;
+    var currentRoundCounts = {};
+    var selectedVersion = "UNO"; 
+    var isDeckExpanded = false;
+    var isDarkSideActive = false;    
+
+    // Данные игроков
+    var players = [
+        { id: 1, name: "ЯНА", score: 0, globalScore: 0 },
+        { id: 2, name: "ИЛЬЯ", score: 0, globalScore: 0 },
+        { id: 3, name: "ЖАННА", score: 0, globalScore: 0 },
+        { id: 4, name: "Игрок 4", score: 0, globalScore: 0 },
+        { id: 5, name: "Игрок 5", score: 0, globalScore: 0 },
+        { id: 6, name: "Игрок 6", score: 0, globalScore: 0 },
+        { id: 7, name: "Игрок 7", score: 0, globalScore: 0 },
+        { id: 8, name: "Игрок 8", score: 0, globalScore: 0 },
+        { id: 9, name: "Игрок 9", score: 0, globalScore: 0 }
+    ];
+
+    // Данные карт для разных версий игры
+    var cardsData = {
+        "UNO": [
+            { id: "c1", points: 1,  img: "uno_1.jpg" }, 
+            { id: "c2", points: 2,  img: "uno_2.jpg" }, 
+            { id: "c3", points: 3,  img: "uno_3.jpg" }, 
+            { id: "c4", points: 4,  img: "uno_4.jpg" }, 
+            { id: "c5", points: 5,  img: "uno_5.jpg" }, 
+            { id: "c6", points: 6,  img: "uno_6.jpg" }, 
+            { id: "c7", points: 7,  img: "uno_7.jpg" }, 
+            { id: "c8", points: 8,  img: "uno_8.jpg" }, 
+            { id: "c9"
+
+
+, points: 9,  img: "uno_9.jpg" }, 
+            { id: "c10", points: 20, img: "uno_10.jpg" }, 
+            { id: "c11", points: 50, img: "uno_11.jpg" }, 
+            { id: "c12", points: 20, img: "uno_12.jpg" }, 
+            { id: "c13", points: 20, img: "uno_13.jpg"}, 
+            { id: "c14", points: 50, img: "uno_14.jpg" }
+        ],
+        "UNO Flip": [
+            { id: "c15", points: 1,  img: "1f.jpg" }, 
+            { id: "c16", points: 2,  img: "2f.jpg" }, 
+            { id: "c17", points: 3,  img: "3f.jpg" }, 
+            { id: "c18", points: 4,  img: "4f.jpg" }, 
+            { id: "c19", points: 5,  img: "5f.jpg" }, 
+            { id: "c20", points: 6,  img: "6f.jpg" }, 
+            { id: "c21", points: 7,  img: "7f.jpg" }, 
+            { id: "c22", points: 8,  img: "8f.jpg" }, 
+            { id: "c23", points: 9,  img: "9f.jpg" }, 
+            { id: "c24", points: 10, img: "10f.png" }, 
+            { id: "c25", points: 40, img: "11f.jpg" }, 
+            { id: "c26", points: 20, img: "12f.jpg" }, 
+            { id: "c27", points: 20, img: "13f.jpg" },
+            { id: "c28", points: 50, img: "14f.png" },
+            { id: "c29", points: 20, img: "15f.png" }
+        ],
+        "UNO Flip dark": [
+            { id: "c30", points: 1,  img: "1f_.png" }, 
+            { id: "c31", points: 2,  img: "2f_.png" }, 
+            { id: "c32", points: 3,  img: "3f_.png" }, 
+            { id: "c33", points: 4,  img: "4f_.png" }, 
+            { id: "c34", points: 5,  img: "5f_.png" }, 
+            { id: "c35", points: 6,  img: "6f_.png" }, 
+            { id: "c36", points: 7,  img: "7f_.png" }, 
+            { id: "c37", points: 8,  img: "8f_.png" }, 
+            { id: "c38", points: 9,  img: "9f_.png" }, 
+            { id: "c39", points: 20, img: "10f_.png" }, 
+            { id: "c40", points: 40, img: "11f_.png" }, 
+            { id: "c41", points: 30, img: "12f_.png" }, 
+            { id: "c42", points: 20, img: "13f_.png" },
+            { id: "c43", points: 60, img: "14f_.png" },
+            { id: "c44", points: 20, img: "15f_.png" }
+        ],
+        "UNO Dos": [
+            { id: "c45", points: 1, img: "1d.png" },
+            { id: "c46", points: 20, img: "2d.png" },
+            { id: "c47", points: 3, img: "3d.png" },
+            { id: "c48", points: 4, img: "4d.png" },
+            { id: "c49", points: 5, img: "5d.png" },
+            { id: "c50", points: 6, img: "6d.png" },
+            { id: "c51", points: 7, img: "7d.png" },
+            { id: "c52", points: 8, img: "8d.png" },
+            { id: "c53", points: 9, img: "9d.png" },
+            { id: "c54", points: 10, img: "10d.png" },
+            { id: "c55", points: 40, img: "11d.png" }
+        ]
+    };
+
+    // Функция для получения правильного ключа колоды
+    function getActiveDeckKey() {
+        if (selectedVersion === "UNO Flip" && isDarkSideActive) {
+            return "UNO Flip dark";
+        }
+        return selectedVersion;
+    }
+
+    // Обработка клика по колоде выбора версии
+    function handleDeckClick(event) {
+        event.stopPropagation();
+        var deckContainer = document.getElementById('version-deck-container');
+        var clickedElement = event.target.closest('.version-card');
+        
+        if (!isDeckExpanded) {
+            // Раскрываем меню
+            deckContainer.classList.add('expanded');
+            isDeckExpanded = true;
+        } else if (clickedElement) {
+            // Выбираем версию
+            var clickedVersion = clickedElement.getAttribute('data-version');
+            if (clickedVersion && clickedVersion !== selectedVersion) {
+                selectedVersion = clickedVersion;
+                isDarkSideActive = false;
+            }
+            
+            // Обновляем активный класс
+            var cards = deckContainer.getElementsByClassName('version-card');
+            for (var i = 0; i < cards.length; i++) {
+                var card = cards[i];
+                if (card.getAttribute('data-version') === selectedVersion) {
+
+
+card.className = "version-card active-deck";
+                } else {
+                    card.className = "version-card";
+                }
+            }
+            
+            deckContainer.classList.remove('expanded');
+            isDeckExpanded = false;
+            
+            // Обновляем отображение, если открыта шторка
+            if (curPlayerId !== null) {
+                renderCardsGrid();
+                updateLiveTotal();
+                updateFlipButtonVisibility();
+            }
+        } else {
+            // Клик не по карточке - закрываем меню
+            deckContainer.classList.remove('expanded');
+            isDeckExpanded = false;
+        }
+    }
+
+    // Отрисовка сетки игроков
+    function renderPlayers() {
+        var html = "";
+        for (var i = 0; i < players.length; i++) {
+            html += '<div class="player-card" data-player-id="' + players[i].id + '">' +
+                    '<div class="player-name-badge">' + players[i].name + '</div>' +
+                    '<div class="player-score">' + players[i].score + '</div>' +
+                    '</div>';
+        }
+        document.getElementById('players-list-target').innerHTML = html;
+        
+        // Добавляем обработчики событий
+        var playerCards = document.querySelectorAll('.player-card');
+        playerCards.forEach(function(card) {
+            card.addEventListener('click', function() {
+                var playerId = parseInt(this.getAttribute('data-player-id'));
+                openCardCalc(playerId);
+            });
+        });
+    }
+
+    // Отрисовка сетки карт в шторке
+    function renderCardsGrid() {
+        var html = "";
+        var currentKey = getActiveDeckKey();
+        var activeCards = cardsData[currentKey] || [];
+        
+        for (var i = 0; i < activeCards.length; i++) {
+            var card = activeCards[i];
+            var count = currentRoundCounts[card.id] || 0;
+            var activeClass = count > 0 ? ' active' : '';
+            html += '<div class="uno-card-item" data-card-id="' + card.id + '">' +
+                    '<div id="badge-' + card.id + '" class="uno-card-counter' + activeClass + '">' + count + '</div>' +
+                    '<img src="' + card.img + '" alt="Карта ' + card.points + ' очков">' +
+                    '</div>';
+        }
+        document.getElementById('cards-grid-target').innerHTML = html;
+        
+        // Добавляем обработчики событий для карт
+        var cardItems = document.querySelectorAll('.uno-card-item');
+        cardItems.forEach(function(item) {
+            item.addEventListener('click', function() {
+                var cardId = this.getAttribute('data-card-id');
+                clickCard(cardId);
+            });
+        });
+    }
+
+    // Обработка клика по карте
+    function clickCard(cardId) {
+        if (!currentRoundCounts[cardId]) { 
+            currentRoundCounts[cardId] = 0; 
+        }
+        currentRoundCounts[cardId]++;
+        
+        var badge = document.getElementById('badge-' + cardId);
+        if(badge) {
+            badge.innerText = currentRoundCounts[cardId];
+            badge.classList.add('active');
+        }
+        updateLiveTotal();
+    }
+
+    // Обновление общей суммы очков
+    function updateLiveTotal() {
+        var currentTotal = 0;
+        var currentKey = getActiveDeckKey();
+        var activeCards = cardsData[currentKey] || [];
+        
+        for (var i = 0; i < activeCards.length; i++) {
+            var card = activeCards[i];
+            var count = currentRoundCounts[card.id] || 0;
+            currentTotal += count * card.points;
+        }
+        document.getElementById('modal-live-score').innerText = "+" + currentTotal;
+    }
+
+    // Обновление видимости кнопки Flip
+    function updateFlipButtonVisibility() {
+        var flipBtn = document.getElementById('flip-side-btn');
+        if (selectedVersion === "UNO Flip") {
+            flipBtn.style.display = "block";
+        } else {
+            flipBtn.style.display = "none";
+
+
+isDarkSideActive = false;
+        }
+    }
+
+    // Открытие калькулятора карт для игрока
+    function openCardCalc(id) {
+        curPlayerId = id;
+        
+        // Находим игрока
+        var player = null;
+        for (var i = 0; i < players.length; i++) {
+            if (players[i].id === id) { 
+                player = players[i]; 
+                break; 
+            }
+        }
+        
+        if(player) {
+            document.getElementById('modal-player-title').innerText = player.name;
+        }
+        
+        // Сбрасываем счетчики
+        currentRoundCounts = {};
+        document.getElementById('modal-live-score').innerText = "+0";
+        
+        // Обновляем видимость кнопки Flip
+        updateFlipButtonVisibility();
+        
+        // Отрисовываем карты
+        renderCardsGrid();
+        
+        // Открываем шторку
+        openSheet();
+    }
+
+    // Подтверждение раунда
+    function confirmRoundScore() {
+        var roundTotal = 0;
+        var currentKey = getActiveDeckKey();
+        var activeCards = cardsData[currentKey] || [];
+        
+        // Считаем общую сумму
+        for (var i = 0; i < activeCards.length; i++) {
+            var card = activeCards[i];
+            var count = currentRoundCounts[card.id] || 0;
+            roundTotal += count * card.points;
+        }
+        
+        // Начисляем очки игроку
+        if (curPlayerId !== null) {
+            for (var j = 0; j < players.length; j++) {
+                if (players[j].id === curPlayerId) {
+                    players[j].score += roundTotal;
+                    break;
+                }
+            }
+            
+            // Проверяем окончание партии
+            var partyOver = false;
+            for (var k = 0; k < players.length; k++) {
+                if (players[k].score >= 500) { 
+                    partyOver = true; 
+                    break; 
+                }
+            }
+            
+            if (partyOver) {
+                alert("Партия окончена! Кто-то набрал больше 500 очков. Результаты перенесены в рейтинг.");
+                for (var m = 0; m < players.length; m++) {
+                    players[m].globalScore += players[m].score; 
+                    players[m].score = 0; 
+                }
+            }
+            
+            // Сбрасываем текущего игрока
+            curPlayerId = null;
+        }
+        
+        renderPlayers(); 
+        closeSheet(); 
+    }
+
+    // Переключение стороны в UNO Flip
+    function toggleFlipSide() {
+        if (selectedVersion === "UNO Flip") {
+            isDarkSideActive = !isDarkSideActive;
+            renderCardsGrid();
+            updateLiveTotal();
+        }
+    }
+
+    // Обновление таблицы лидеров
+    function updateLeaderboard() {
+        var sorted = players.slice();
+        sorted.sort(function(a, b) { 
+            return b.globalScore - a.globalScore; 
+        });
+        
+        var html = "";
+        for (var i = 0; i < sorted.length; i++) {
+            var player = sorted[i];
+            var frameImgClass;
+            if (i === 0) {
+                frameImgClass = "rank-1";
+            } else if (i === 1) {
+                frameImgClass = "rank-2";
+            } else if (i === 2) {
+                frameImgClass = "rank-3";
+            } else {
+                frameImgClass = "rank-other";
+            }
+            
+            html += '<div class="rating-player-row ' + frameImgClass + '">' +
+                        '<div>' + (i + 1) + '. ' + player.name + '</div>' +  
+                        '<div class="rating-points">' + player.globalScore + '</div>' +            
+                    '</div>';
+        }
+        document.getElementById('rating-list-target').innerHTML = html;
+    }
+
+    // Переключение страниц
+    function switchPage(pageId) {
+        document.getElementById('page-game').classList.remove('active');
+        document.getElementById('page-rating').classList.remove('active');
+        document.getElementById('page-settings').classList.remove('active');
+
+
+document.getElementById(pageId).classList.add('active');
+        
+        var deckContainer = document.getElementById('version-deck-container');
+        if (deckContainer) {
+            if(pageId === 'page-game') {
+                deckContainer.style.visibility = 'visible';
+                deckContainer.style.opacity = '1';
+                deckContainer.style.pointerEvents = 'auto'; 
+            } else {
+                deckContainer.style.visibility = 'hidden';
+                deckContainer.style.opacity = '0';
+                deckContainer.style.pointerEvents = 'none'; 
+            }
+            deckContainer.classList.remove('expanded');
+            isDeckExpanded = false;
+        }
+        
+        if(pageId === 'page-rating') {
+            updateLeaderboard();
+        }
+        
+        closeSheet();
+    }
+
+    // Управление шторкой
+    function openSheet() { 
+        var overlay = document.getElementById('modal-overlay');
+        if (overlay) overlay.classList.add('open');
+        
+        setTimeout(function() {
+            var sheet = document.getElementById('sheet-cards');
+            if (sheet) sheet.classList.add('open'); 
+        }, 10);
+    }
+
+    function closeSheet() { 
+        var sheet = document.getElementById('sheet-cards');
+        if (sheet) sheet.classList.remove('open'); 
+        
+        setTimeout(function() {
+            var overlay = document.getElementById('modal-overlay');
+            if (overlay) overlay.classList.remove('open');
+        }, 300); 
+    }
+
+    // Назначаем обработчики событий
+    var deckContainer = document.getElementById('version-deck-container');
+    deckContainer.addEventListener('click', handleDeckClick);
+    
+    document.getElementById('modal-overlay').addEventListener('click', closeSheet);
+    document.getElementById('sheet-cards').addEventListener('click', function(event) {
+        event.stopPropagation();
+    });
+    
+    document.getElementById('flip-side-btn').addEventListener('click', toggleFlipSide);
+    document.getElementById('btn-confirm').addEventListener('click', confirmRoundScore);
+    
+    document.getElementById('btn-game').addEventListener('click', function() {
+        switchPage('page-game');
+    });
+    
+    document.getElementById('btn-rating').addEventListener('click', function() {
+        switchPage('page-rating');
+    });
+    
+    document.getElementById('btn-settings').addEventListener('click', function() {
+        switchPage('page-settings');
+    });
+    
+    // Закрытие меню при клике вне его
+    document.addEventListener('click', function(event) {
+        if (isDeckExpanded && deckContainer && !deckContainer.contains(event.target)) {
+            deckContainer.classList.remove('expanded');
+            isDeckExpanded = false;
+        }
+    });
+
+    // Инициализация
+    renderPlayers();
+    
+});
+</script>
+</body>
+</html>
