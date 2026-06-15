@@ -7,13 +7,42 @@
     <title>UNO Counter</title>
     <style>
         * { box-sizing: border-box; user-select: none; }
-        body {
-            margin: 0; padding: 0; font-family: Arial, sans-serif;
-            background-image: url('background.png'); background-size: cover;
-            background-position: center; background-repeat: no-repeat;
-            background-attachment: fixed; display: flex; justify-content: center; min-height: 100vh; margin: 0 auto;
-        }
-        
+body {
+    margin: 0; padding: 0; font-family: Arial, sans-serif;
+    background-size: cover; background-position: center; 
+    background-repeat: no-repeat; background-attachment: fixed; 
+    display: flex; justify-content: center; min-height: 100vh; margin: 0 auto;
+    
+    /* Базовые картинки для обычной UNO */
+    --bg-main: url('background.png');
+    --bg-bottom-sheet: url('vibor_card.png');
+    --bg-sheet-color: red;
+    --bg-calc-player-badge: #24a122;
+    --bg-calc-player-badge-2: #E50000;
+    
+    background-image: var(--bg-main);
+    transition: background-image 0.3s ease;
+}
+
+/* Переменные для режима UNO Flip */
+body[data-theme="UNO Flip"] {
+    --bg-main: url('background_flip.png');
+    --bg-bottom-sheet: url('vibor_card_f.png');
+    --bg-sheet-color: #6A0851; 
+    --bg-calc-player-badge: #6A0851;
+    --bg-calc-player-badge-2: #6A0851; 
+    --bg-btn-ok: ('button_ok_f.png');
+}
+
+/* Переменные для режима UNO Dos */
+body[data-theme="UNO Dos"] {
+    --bg-main: url('background_dos.png');
+    --bg-bottom-sheet: url('vibor_card_d.png');
+    --bg-sheet-color: #1B0094; 
+    --bg-calc-player-badge: #000000;
+    --bg-calc-player-badge-2: #1B0094;
+}
+
         .app-container {
             width: 100%; max-width: 420px; height: 100vh;
             display: flex; flex-direction: column; justify-content: flex-start;
@@ -130,22 +159,22 @@
         .player-name-badge { 
             position: absolute;
             top: 7px; left: 0; right: 0;
-            color: #E50000; font-size: 15px; font-weight: bold; text-align: center; padding: 0 5px;
+            color: var(--bg-calc-player-badge-2); font-size: 15px; font-weight: bold; text-align: center; padding: 0 5px;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .player-score { 
-            position: absolute; bottom: 5px; left: 0;
+            position: absolute; bottom: 10px; left: 0;
 
 
 right: 0; 
-            text-align: center; color: #E50000; font-size: 20px; font-weight: bold; 
+            text-align: center; color: var(--bg-calc-player-badge-2); font-size: 20px; font-weight: bold; 
         }
         
         /* Нижнее меню навигации */
 .bottom-nav {
     /* МЕНЯЕМ НА FIXED, чтобы меню замерло на экране телефона */
     position: fixed; 
-    bottom: 0px; 
+    bottom: -85px; 
     
     /* Центрируем панель, чтобы на мониторе она не улетала */
     left: 50%;
@@ -153,15 +182,13 @@ right: 0;
     
     width: 100%; 
     max-width: 420px; /* Ограничиваем ширину под твой "экран смартфона" */
-    height: 65px;
+    height: 165px;
     
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
     z-index: 150; 
 }
-
-
 
         .nav-btn { width:50%; height: 100%; cursor: pointer; }
         .nav-btn img { width: 100%; height: 100%; object-fit: contain; }
@@ -176,7 +203,7 @@ right: 0;
         
         .bottom-sheet {
             position: absolute; bottom: 0; left: 0; right: 0; 
-            background-image: url('vibor_card.png'); 
+            background-image: var(--bg-bottom-sheet); 
             background-size: 100% auto; 
             background-position: top center;
             background-repeat: no-repeat;
@@ -194,13 +221,13 @@ right: 0;
         
         .calc-player-badge {
             position: absolute; background: transparent; border: none;
-            font-size: 35px; font-weight: bold; color: #09BC00; text-align: center;
-            top: 15px; left: 40px; width: 160px; z-index: 1010;
+            font-size: 35px; font-weight: bold; color: var(--bg-calc-player-badge); text-align: center;
+            top: 15px; left: 70px; width: 160px; z-index: 1010;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .calc-score-badge {
             position: absolute; background: transparent; border: none;
-            font-size: 35px; font-weight: bold; color: #09BC00; text-align: center;
+            font-size: 35px; font-weight: bold; color: var(--bg-calc-player-badge); text-align: center;
             top: 15px; right: 130px; width: 0px; z-index: 1010; transform: translateX(50%);
         }
         
@@ -267,7 +294,7 @@ right: 0;
     left: 175px;
     font-size: 23px;
     text-transform: uppercase;    /* Все буквы заглавные */
-    color: #E50000;
+    color: var(--bg-calc-player-badge-2);
 }
 
 /* СТИЛЬ ДЛЯ НОМЕРА В ТОПЕ (1, 2, 3...) */
@@ -285,7 +312,7 @@ right: 0;
     bottom: 39px;                 /* Точно такое же расстояние снизу, как и у номера */
     right: 80px;                  /* Отступ от правого края */
     font-size: 25px;
-    color: #E50000;
+    color: var(--bg-calc-player-badge-2);
 }
         .rank-1 { background-image: url('frame_player_gold.png'); }
         .rank-2 { background-image: url('frame_player_silver.png'); }
@@ -324,9 +351,17 @@ right: 0;
     </div>
 
     <div class="bottom-nav">
-        <div class="nav-btn" id="btn-game"><img src="button_start.png" alt="Игра"></div>
-        <div class="nav-btn" id="btn-rating"><img src="button_leaderboard.png" alt="Рейтинг"></div>
-        <div class="nav-btn" id="btn-settings"><img src="button_settings.png" alt="Настройки"></div>
+<div class="nav-btn" id="btn-game">
+    <img id="img-nav-game" src="button_start.png" alt="Игра">
+</div>
+
+<div class="nav-btn" id="btn-rating">
+    <img id="img-nav-rating" src="button_leaderboard.png" alt="Рейтинг">
+</div>
+
+<div class="nav-btn" id="btn-settings">
+    <img id="img-nav-settings" src="button_settings.png" alt="Настройки">
+</div>
     </div>
 
     <div id="modal-overlay" class="modal-overlay-bg">
@@ -338,9 +373,9 @@ right: 0;
             <div id="modal-live-score" class="calc-score-badge">+0</div>
             <div class="cards-scroll-area">
                 <div id="cards-grid-target" class="uno-cards-grid"></div>
-            </div>
-            <img src="button_ok.png" class="btn-confirm-round" id="btn-confirm" alt="OK">
-        </div>
+<div id="btn-confirm" class="btn-confirm-round">
+    <img id="img-btn-ok" src="button_ok.png" alt="OK" style="width:100%; height:100%;">
+</div>
     </div>
 </div>
 
@@ -353,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var currentRoundCounts = {};
     var selectedVersion = "UNO"; 
     var isDeckExpanded = false;
-    var isDarkSideActive = false;    
+    var isDarkSideActive = false; 
 
     // Данные игроков
     var players = [
@@ -367,6 +402,30 @@ document.addEventListener('DOMContentLoaded', function() {
         { id: 8, name: "Игрок 8", score: 0, globalScore: 0 },
         { id: 9, name: "Игрок 9", score: 0, globalScore: 0 }
     ];
+
+var themeAssets = {
+    "UNO": {
+        btnGame: "button_start.png",
+        btnRating: "button_leaderboard.png",
+        btnSettings: "button_settings.png",
+        ratingTitle: "top.png",
+        btnOk: "button_ok.png"
+    },
+    "UNO Flip": {
+        btnGame: "button_start_f.png",
+        btnRating: "button_leaderboard_f.png",
+        btnSettings: "button_settings_f.png",
+        ratingTitle: "top_f.png",
+        btnOk: "button_ok_f.png"
+    },
+    "UNO Dos": {
+        btnGame: "button_start_d.png",
+        btnRating: "button_leaderboard_d.png",
+        btnSettings: "button_settings_d.png",
+        ratingTitle: "top_d.png",
+        btnOk: "button_ok_d.png"
+    }
+};
 
     // Данные карт для разных версий игры
     var cardsData = {
@@ -456,13 +515,33 @@ document.addEventListener('DOMContentLoaded', function() {
             // Раскрываем меню
             deckContainer.classList.add('expanded');
             isDeckExpanded = true;
-        } else if (clickedElement) {
-            // Выбираем версию
-            var clickedVersion = clickedElement.getAttribute('data-version');
-            if (clickedVersion && clickedVersion !== selectedVersion) {
+    } else if (clickedElement) {
+        var clickedVersion = clickedElement.getAttribute('data-version');
+        if (clickedVersion && clickedVersion !== selectedVersion) {
                 selectedVersion = clickedVersion;
                 isDarkSideActive = false;
+            
+            // --- ЭТОТ КУСОК К О Д А НАДО ДОБАВИТЬ СЮДА ---
+            // Меняем тему на самом body (CSS переключит фоны)
+            document.body.setAttribute('data-theme', selectedVersion);
+
+            
+            // Меняем иконки в HTML кнопках
+            var assets = themeAssets[selectedVersion];
+            if (assets) {
+                var imgGame = document.getElementById('img-nav-game');
+                var imgRating = document.getElementById('img-nav-rating');
+                var imgSettings = document.getElementById('img-nav-settings');
+                var imgTitle = document.getElementById('rating-title');
+                var imgOk = document.getElementById('img-btn-ok'); /* <-- 1. НАХОДИМ КНОПКУ ОК */
+                
+                if (imgGame) imgGame.src = assets.btnGame;
+                if (imgRating) imgRating.src = assets.btnRating;
+                if (imgSettings) imgSettings.src = assets.btnSettings;
+                if (imgTitle) imgTitle.src = assets.ratingTitle;
+                if (imgOk) imgOk.src = assets.btnOk; /* <-- 2. МЕНЯЕМ ЕЙ КАРТИНКУ */
             }
+        }
             
             // Обновляем активный класс
             var cards = deckContainer.getElementsByClassName('version-card');
