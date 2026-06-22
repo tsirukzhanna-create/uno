@@ -66,6 +66,7 @@ width: 100%; max-width: 420px; height: 100vh;
 display: flex; flex-direction: column; justify-content: flex-start;
 position: relative; overflow: hidden; background: rgba(0,0,0,0.1);
 }
+
 /* ГЛАВНАЯ ПЛАШКА ВЫБОРА ИГРЫ */
 .game-version-deck {
 width: calc(100% - 30px);
@@ -94,21 +95,29 @@ z-index: 10;
 .game-version-deck.expanded .version-card[data-version="UNO Dos"] { transform: translateY(130px); z-index: 20; }
 .game-version-deck.expanded .version-card[data-version="UNO Flip"] { transform: translateY(10px); z-index: 40; }
 
+/* ОБЕРТКА ДЛЯ СЛАЙДЕРА СТРАНИЦ */
+.pages-wrapper {
+display: flex;
+width: 300%;
+height: 100%;
+transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+will-change: transform;
+flex: 1;
+}
+
 /* КОНТЕЙНЕРЫ СТРАНИЦ */
 .page {
-display: none;
+display: flex;
 flex-direction: column;
 align-items: center;
 padding: 0 15px 90px 15px;
-flex: 1;
-width: 100%;
-position: absolute;
-top: 0; bottom: 0; left: 0; right: 0;
+width: 33.3333%;
+height: 100%;
 overflow-y: auto;
 scrollbar-width: none;
+box-sizing: border-box;
 }
 .page::-webkit-scrollbar { display: none; }
-.page.active { display: flex; }
 
 .players-grid {
 display: grid; grid-template-columns: repeat(3, 104px); justify-content: center; gap: 18px;
@@ -185,7 +194,7 @@ width: 26px; height: 26px; display: none; justify-content: center; align-items: 
 .rating-scroll-container { width: 100%; display: flex; flex-direction: column; gap: 0px; padding: 0px 0px 20px 0px; margin-top: 0px; }
  .rating-player-row { height: 160px; width: 100%; position: relative; font-weight: bold; overflow: hidden; }
  .rating-row-frame { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: contain; background-repeat: no-repeat; background-position: center; z-index: 2; pointer-events: none; }
- .rating-row-photo { position: absolute; top: 25px; left: 32px; width: 100px; height: 100px; z-index: 1; object-fit: cover; border-radius: 0%; background-color: #2c2c2c; }
+ .rating-row-photo { position: absolute; top: 25px; left: 32px; width: 100px; height: 100px; z-index: 1; object-fit: cover; border-radius: 15px; background-color: #2c2c2c; }
  .rating-player-name { position: absolute; top: 29px; left: 175px; font-size: 23px; text-transform: uppercase; color: var(--bg-calc-player-badge-2); z-index: 3; }
  .rating-player-rank { position: absolute; bottom: 39px; left: 186px; font-size: 25px; color: white; z-index: 3; }
  .rating-player-score { position: absolute; bottom: 39px; right: 80px; font-size: 25px; color: var(--bg-calc-player-badge-2); z-index: 3; }
@@ -255,18 +264,22 @@ aspect-ratio: 104/191; width: 104px; cursor: pointer; filter: drop-shadow(0px 4p
 <div id="card-flip" class="version-card" data-version="UNO Flip"><img src="flip.png" alt="UNO Flip"></div>
 <div id="card-dos" class="version-card" data-version="UNO Dos"><img src="dos.png" alt="UNO Dos"></div>
 </div>
-<div id="page-game" class="page active" style="padding-top: 120px;">
-<div class="players-grid" id="main-players-grid"></div>
+
+<div id="pages-wrapper" class="pages-wrapper">
+    <div id="page-game" class="page active" style="padding-top: 120px;">
+        <div class="players-grid" id="main-players-grid"></div>
+    </div>
+    <div id="page-rating" class="page" style="padding-top: 0px;">
+        <div class="sticky-header-image rating-title-image"></div>
+        <div id="rating-list-target" class="rating-scroll-container"></div>
+    </div>
+    <div id="page-settings" class="page" style="padding-top: 0px;">
+        <div class="sticky-header-image settings-title-image"></div>
+        <div id="settings-players-list" style="width: 100%;"></div>
+        <button class="btn-add-new-player-trigger" id="btn-create-player">+ Добавить игрока</button>
+    </div>
 </div>
-<div id="page-rating" class="page" style="padding-top: 0px;">
-   <div class="sticky-header-image rating-title-image"></div>
-   <div id="rating-list-target" class="rating-scroll-container"></div>
-</div>
-<div id="page-settings" class="page" style="padding-top: 0px;">
-   <div class="sticky-header-image settings-title-image"></div>
-   <div id="settings-players-list" style="width: 100%;"></div>
-   <button class="btn-add-new-player-trigger" id="btn-create-player">+ Добавить игрока</button>
-</div>
+
 <div class="bottom-nav">
 <div class="nav-btn" id="btn-game"><img id="img-nav-game" src="button_start.png" alt="Игра"></div>
 <div class="nav-btn" id="btn-rating"><img id="img-nav-rating" src="button_leaderboard.png" alt="Рейтинг"></div>
@@ -316,7 +329,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Используем один документ в коллекции для полной синхронизации структуры (как было в localStorage)
 const gameStateRef = doc(db, "uno_app", "game_state");
 
 var curPlayerId = null;
@@ -325,6 +337,15 @@ var selectedVersion = "UNO";
 var isDeckExpanded = false;
 var isDarkSideActive = false;
 var photoTargetPlayerId = null;
+
+// ПЕРЕМЕННЫЕ ДЛЯ СЛАЙДЕРА
+const pagesList = ['page-game', 'page-rating', 'page-settings'];
+let currentPageIndex = 0;
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+const SWIPE_THRESHOLD = 45; // Порог в пикселях для исключения ложных срабатываний
 
 var defaultPlayers = [
 { id: 1, name: "ЯНА", score: 0, globalScore: 0, photo: "photo_5305306486818938491_y.jpg" },
@@ -342,23 +363,19 @@ var players = [];
 var activePlayerIds = [];
 var tempSelectedPlayerIds = [];
 
-// Функция сохранения теперь отправляет данные в Firestore
 function savePlayersToDB() {
   setDoc(gameStateRef, { players: players }, { merge: true })
     .catch(error => console.error("Ошибка сохранения в Firebase:", error));
 }
 
-// Слушатель реального времени для обновления со всех устройств
 onSnapshot(gameStateRef, (docSnap) => {
   if (docSnap.exists()) {
     players = docSnap.data().players || [];
   } else {
-    // Если база пустая, загружаем стандартных игроков
     players = defaultPlayers;
     savePlayersToDB();
   }
   
-  // Автоматическая перерисовка интерфейса при приходе новых данных из облака
   renderMainGrid();
   if (document.getElementById('page-rating').classList.contains('active')) updateLeaderboard();
   if (document.getElementById('page-settings').classList.contains('active')) renderSettingsPlayers();
@@ -819,11 +836,19 @@ document.getElementById('hidden-photo-input').addEventListener('change', functio
   reader.readAsDataURL(file);
 });
 
+// ОБНОВЛЕННАЯ ФУНКЦИЯ ПЕРЕКЛЮЧЕНИЯ СТРАНИЦ
 function switchPage(pageId) {
-document.getElementById('page-game').classList.remove('active');
-document.getElementById('page-rating').classList.remove('active');
-document.getElementById('page-settings').classList.remove('active');
+const newIndex = pagesList.indexOf(pageId);
+if (newIndex === -1) return;
+currentPageIndex = newIndex;
+
+// Логическое переключение классов active для триггеров обновления контента
+pagesList.forEach(id => document.getElementById(id).classList.remove('active'));
 document.getElementById(pageId).classList.add('active');
+
+// Анимация слайда
+document.getElementById('pages-wrapper').style.transform = `translateX(-${currentPageIndex * 33.3333}%)`;
+
 var deckContainer = document.getElementById('version-deck-container');
 if (deckContainer) {
 if(pageId === 'page-game') {
@@ -842,6 +867,47 @@ if(pageId === 'page-rating') { updateLeaderboard(); }
 if(pageId === 'page-settings') { renderSettingsPlayers(); }
 closeSheet();
 closePlayerSelectorMenu();
+}
+
+// ЛОГИКА ОБРАБОТКИ СВАЙПОВ (TOUCH EVENTS)
+const pagesWrapper = document.getElementById('pages-wrapper');
+
+pagesWrapper.addEventListener('touchstart', function(e) {
+  touchStartX = e.changedTouches[0].screenX;
+  touchStartY = e.changedTouches[0].screenY;
+}, {passive: true});
+
+pagesWrapper.addEventListener('touchend', function(e) {
+  touchEndX = e.changedTouches[0].screenX;
+  touchEndY = e.changedTouches[0].screenY;
+  handleSwipe();
+}, {passive: true});
+
+function handleSwipe() {
+  // Блокируем свайп, если открыты модальные окна поверх интерфейса
+  if (document.getElementById('modal-overlay').classList.contains('open') ||
+      document.getElementById('player-modal-overlay').classList.contains('open')) {
+      return;
+  }
+
+  const diffX = touchStartX - touchEndX;
+  const diffY = touchStartY - touchEndY;
+
+  // Проверка: горизонтальный свайп должен быть больше вертикального (защита от ложных срабатываний при скролле)
+  // и превышать установленный порог (SWIPE_THRESHOLD)
+  if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > SWIPE_THRESHOLD) {
+      if (diffX > 0) {
+          // Свайп влево -> следующая страница
+          if (currentPageIndex < pagesList.length - 1) {
+              switchPage(pagesList[currentPageIndex + 1]);
+          }
+      } else {
+          // Свайп вправо -> предыдущая страница
+          if (currentPageIndex > 0) {
+              switchPage(pagesList[currentPageIndex - 1]);
+          }
+      }
+  }
 }
 
 function openSheet() {
@@ -870,9 +936,11 @@ document.getElementById('player-modal-overlay').addEventListener('click', closeP
 document.getElementById('player-selector-menu').addEventListener('click', function(event) { event.stopPropagation(); });
 document.getElementById('flip-side-btn').addEventListener('click', toggleFlipSide);
 document.getElementById('btn-confirm').addEventListener('click', confirmRoundScore);
+
 document.getElementById('btn-game').addEventListener('click', function() { switchPage('page-game'); });
 document.getElementById('btn-rating').addEventListener('click', function() { switchPage('page-rating'); });
 document.getElementById('btn-settings').addEventListener('click', function() { switchPage('page-settings'); });
+
 document.addEventListener('click', function(event) {
 if (isDeckExpanded && deckContainer && !deckContainer.contains(event.target)) {
 deckContainer.classList.remove('expanded');
