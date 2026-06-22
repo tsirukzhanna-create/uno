@@ -1,871 +1,1260 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNO Counter</title>
-    <style>
-        * { box-sizing: border-box; user-select: none; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNO Counter</title>
+<style>
+* { box-sizing: border-box; user-select: none; }
 body {
-    margin: 0; padding: 0; font-family: Arial, sans-serif;
-    background-size: cover; background-position: center; 
-    background-repeat: no-repeat; background-attachment: fixed; 
-    display: flex; justify-content: center; min-height: 100vh; margin: 0 auto;
-    
-    /* Базовые картинки для обычной UNO */
-    --bg-main: url('background.png');
-    --bg-bottom-sheet: url('vibor_card.png');
-    --bg-sheet-color: red;
-    --bg-calc-player-badge: #24a122;
-    --bg-calc-player-badge-2: #E50000;
-    
-    background-image: var(--bg-main);
-    transition: background-image 0.3s ease;
+margin: 0; padding: 0; font-family: Arial, sans-serif;
+background-size: cover; background-position: center;
+background-repeat: no-repeat; background-attachment: fixed;
+display: flex; justify-content: center; min-height: 100vh;
+/* Базовые картинки для обычной UNO */
+--bg-main: url('background.png');
+--bg-bottom-sheet: url('vibor_card.png');
+--bg-sheet-color: red;
+--bg-calc-player-badge: #24a122;
+--bg-calc-player-badge-2: #E50000;
+--bg-calc-vibor-player: url('vibor_player.png');
+--bg-player-row-active-bg: url('player_row_active_bg.png');
+--bg-player-row-bg: url('player_row_bg.png');
+--bg-image-add-player: url('image_add_player.png');
+--bg-button-ok: url('button_ok.png');
+--bg-btn-confirm: url('button_ok.png');
+--bg-rating-header: url('top.png');
+--bg-settings-header: url('player.png');
+background-image: var(--bg-main);
+transition: background-image 0.3s ease;
 }
-
 /* Переменные для режима UNO Flip */
 body[data-theme="UNO Flip"] {
-    --bg-main: url('background_flip.png');
-    --bg-bottom-sheet: url('vibor_card_f.png');
-    --bg-sheet-color: #6A0851; 
-    --bg-calc-player-badge: #6A0851;
-    --bg-calc-player-badge-2: #6A0851; 
-    --bg-btn-ok: ('button_ok_f.png');
+--bg-main: url('background_flip.png');
+--bg-bottom-sheet: url('vibor_card_f.png');
+--bg-sheet-color: #6A0851;
+--bg-calc-player-badge: #6A0851;
+--bg-calc-player-badge-2: #6A0851;
+--bg-btn-ok: url('button_ok_f.png');
+--bg-calc-vibor-player: url('vibor_player_f.png');
+--bg-player-row-active-bg: url('player_row_active_bg_f.png');
+--bg-player-row-bg: url('player_row_bg_f.png');
+--bg-image-add-player: url('image_add_player_f.png');
+--bg-button-ok: url('button_ok_f.png');
+--bg-btn-confirm: url('button_ok_f.png');
+--bg-rating-header: url('top_f.png');
+--bg-settings-header: url('player_f.png');
 }
-
 /* Переменные для режима UNO Dos */
 body[data-theme="UNO Dos"] {
-    --bg-main: url('background_dos.png');
-    --bg-bottom-sheet: url('vibor_card_d.png');
-    --bg-sheet-color: #1B0094; 
-    --bg-calc-player-badge: #000000;
-    --bg-calc-player-badge-2: #1B0094;
+--bg-main: url('background_dos.png');
+--bg-bottom-sheet: url('vibor_card_d.png');
+--bg-sheet-color: #1B0094;
+--bg-calc-player-badge: #000000;
+--bg-calc-player-badge-2: #1B0094;
+--bg-calc-vibor-player: url('vibor_player_d.png');
+--bg-player-row-active-bg: url('player_row_active_bg_d.png');
+--bg-player-row-bg: url('player_row_bg_d.png');
+--bg-image-add-player: url('image_add_player_d.png');
+--bg-button-ok: url('button_ok_d.png');
+--bg-btn-confirm: url('button_ok_d.png');
+--bg-rating-header: url('top_d.png');
+--bg-settings-header: url('player_d.png');
 }
+.app-container {
+width: 100%; max-width: 420px; height: 100vh;
+display: flex; flex-direction: column; justify-content: flex-start;
+position: relative; overflow: hidden; background: rgba(0,0,0,0.1);
+}
+/* ГЛАВНАЯ ПЛАШКА ВЫБОРА ИГРЫ */
+.game-version-deck {
+width: calc(100% - 30px);
+max-width: 380px;
+height: 1030px;
+margin: -930px auto 15px auto;
+position: relative;
+z-index: 300;
+transition: opacity 0.2s ease;
+}
+.version-card {
+position: absolute;
+width: 100%;
+left: 0;
+top: 0;
+cursor: pointer;
+transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+opacity: 0;
+z-index: 10;
+}
+.version-card img { width: 100%; display: block; }
+/* Активная карта в закрытом состоянии */
+.version-card.active-deck {
+z-index: 40;
+opacity: 1;
+transform: translateY(0);
+}
+/* При раскрытии меню */
+.game-version-deck.expanded {
+z-index: 400;
+}
+.game-version-deck.expanded .version-card {
+opacity: 1;
+}
+.game-version-deck.expanded .version-card[data-version="UNO"] { transform: translateY(250px); z-index: 10; }
+.game-version-deck.expanded .version-card[data-version="UNO Dos"] { transform: translateY(130px); z-index: 20; }
+.game-version-deck.expanded .version-card[data-version="UNO Flip"] { transform: translateY(10px); z-index: 40; }
 
-        .app-container {
-            width: 100%; max-width: 420px; height: 100vh;
-            display: flex; flex-direction: column; justify-content: flex-start;
-            position: relative; overflow: hidden; background: rgba(0,0,0,0.1);
-        }
-        
-        /* ГЛАВНАЯ ПЛАШКА ВЫБОРА ИГРЫ */
-        .game-version-deck { 
-            width: calc(100% - 30px); 
-            max-width: 380px; 
-            height: 1030px;                 
-            margin: -930px auto 15px auto;
-            position: relative; 
-            z-index: 300; 
-            transition: opacity 0.2s ease;
-        }
-        
-        .version-card {
-            position: absolute;
-            width: 100%;
-            left: 0;
-            top: 0;
-            cursor: pointer;
-            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
-            opacity: 0;
-            z-index: 10;
-        }
-        .version-card img { width: 100%; display: block; }
-        
-        /* Активная карта в закрытом состоянии */
-        .version-card.active-deck { 
-            z-index: 40; 
-            opacity: 1; 
-            transform: translateY(0); 
-        }
-        
-        /* При раскрытии меню */
-        .game-version-deck.expanded { 
-            z-index: 400; 
-        }
-        .game-version-deck.expanded .version-card { 
-            opacity: 1; 
-        }
-        
-        .game-version-deck.expanded .version-card[data-version="UNO"] { transform: translateY(250px); z-index: 10; }
-        .game-version-deck.expanded .version-card[data-version="UNO Dos"] { transform: translateY(130px); z-index: 20; }
-        .game-version-deck.expanded .version-card[data-version="UNO Flip"] { transform: translateY(10px); z-index: 40; }
-        
-        /* КОНТЕЙНЕРЫ СТРАНИЦ */
-        .page { 
-            display: none; 
-            flex-direction: column; 
-            align-items: center; 
-            padding: 0 15px 90px 15px; 
-            flex: 1;
-            width: 100%;
-            overflow-y: auto; 
-            scrollbar-width: none; 
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            overflow-y: auto;
-            scrollbar-width: none;
-        }
-        .page::-webkit-scrollbar { display: none; }
-        .page.active { display: flex; }
-        
-        /* Сетка игроков */
+/* КОНТЕЙНЕРЫ СТРАНИЦ */
+.page {
+display: none;
+flex-direction: column;
+align-items: center;
+padding: 0 15px 90px 15px;
+flex: 1;
+width: 100%;
+position: absolute;
+top: 0; bottom: 0; left: 0; right: 0;
+overflow-y: auto;
+scrollbar-width: none;
+}
+.page::-webkit-scrollbar { display: none; }
+.page.active { display: flex; }
+
+/* Сетка игроков */
 .players-grid {
-    display: grid;
-    
-    /* ИСПРАВЛЯЕМ ТУТ: Колонки теперь ЖЁСТКО по 104px, они физически не смогут растянуться */
-    grid-template-columns: repeat(3, 104px); 
-    
-    /* Автоматически распределяем колонки по центру, а лишнее место пускаем на gap */
-    justify-content: center; 
-    gap: 18px; 
-    
-    width: 100%;
-    max-width: 380px; 
-    margin: 20px auto 0 auto; 
-    padding: 0 10px;
-    position: relative;
-    z-index: 50;
+display: grid;
+grid-template-columns: repeat(3, 104px);
+justify-content: center;
+gap: 18px;
+width: 100%;
+max-width: 380px;
+margin: 20px auto 0 auto;
+padding: 0 10px;
+position: relative;
+z-index: 50;
 }
-        /* Карточка игрока */
+/* Карточка игрока (Контейнер-бутерброд) */
 .player-card {
-    background-image: url('image_player_card.png');
-    background-size: 100% 100%;
-    background-repeat: no-repeat;
-    
-    /* Фиксируем размеры намертво со всех сторон */
-    width: 104px;
-    min-width: 104px;
-    max-width: 104px;
-    height: 191px;
-    min-height: 191px;
-    max-height: 191px;
-    
-    /* Защита от искажений из-за внутренних элементов */
-    box-sizing: border-box; 
-    
-    margin: 0 auto;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.25));
+width: 104px; 
+height: 191px; 
+box-sizing: border-box;
+margin: 0 auto;
+position: relative;
+display: flex;
+flex-direction: column;
+justify-content: space-between;
+align-items: center;
+cursor: pointer;
+filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.25));
 }
-        .player-name-badge { 
-            position: absolute;
-            top: 7px; left: 0; right: 0;
-            color: var(--bg-calc-player-badge-2); font-size: 15px; font-weight: bold; text-align: center; padding: 0 5px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .player-score { 
-            position: absolute; bottom: 10px; left: 0;
-
-
-right: 0; 
-            text-align: center; color: var(--bg-calc-player-badge-2); font-size: 20px; font-weight: bold; 
-        }
-        
-        /* Нижнее меню навигации */
+/* СЛОЙ 2: Рамка поверх фотографии */
+.player-card-frame {
+position: absolute;
+top: 0; left: 0; width: 100%; height: 100%;
+background-image: url('image_player_card.png');
+background-size: 100% 100%;
+background-repeat: no-repeat;
+z-index: 2;
+pointer-events: none;
+}
+/* СЛОЙ 1: Фотография под рамкой */
+.player-photo {
+position: absolute;
+top: 40px; left: 13px; width: 75%; height: 70%;
+z-index: 1;
+object-fit: cover;
+background-color: #2c2c2c;
+}
+/* СЛОЙ 3: Информационные элементы */
+.player-name-badge {
+position: absolute;
+top: 7px; left: 0; right: 0;
+color: var(--bg-calc-player-badge-2); font-size: 15px; font-weight: bold; text-align: center; padding: 0 5px;
+white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+z-index: 3;
+}
+.player-score {
+position: absolute; bottom: 10px; left: 0; right: 0;
+text-align: center; color: var(--bg-calc-player-badge-2); font-size: 20px; font-weight: bold;
+z-index: 3;
+}
+/* Нижнее меню навигации */
 .bottom-nav {
-    /* МЕНЯЕМ НА FIXED, чтобы меню замерло на экране телефона */
-    position: fixed; 
-    bottom: -85px; 
-    
-    /* Центрируем панель, чтобы на мониторе она не улетала */
-    left: 50%;
-    transform: translateX(-50%);
-    
-    width: 100%; 
-    max-width: 420px; /* Ограничиваем ширину под твой "экран смартфона" */
-    height: 165px;
-    
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    z-index: 150; 
+position: fixed;
+bottom: -85px;
+left: 50%;
+transform: translateX(-50%);
+width: 100%; max-width: 420px;
+height: 165px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+z-index: 150;
+}
+.nav-btn { width:50%; height: 100%; cursor: pointer; }
+.nav-btn img { width: 100%; height: 100%; object-fit: contain; }
+
+/* Шторки и модальные оверлеи */
+.modal-overlay-bg {
+position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+background-color: rgba(0, 0, 0, 0.5); z-index: 999;
+display: none;
+}
+.modal-overlay-bg.open { display: block; }
+
+/* Общая база для обеих шторок (подсчета и выбора игроков) */
+.bottom-sheet, .player-selector-menu {
+position: absolute; bottom: 0; left: 0; right: 0;
+background-size: 100% auto;
+background-position: top center;
+background-repeat: no-repeat;
+background-color: transparent;
+height: 550px;
+transform: translateY(100%);
+transition: transform 0.3s ease-out;
+z-index: 1000;
+display: flex;
+flex-direction: column;
+}
+.bottom-sheet.open, .player-selector-menu.open { transform: translateY(0); }
+
+/* Индивидуальные фоны для шторок */
+.sheet-cards-bg {
+background-image: var(--bg-bottom-sheet);
+padding: 75px 25px 0px 25px;
+}
+.player-selector-menu-bg {
+background-image: var(--bg-calc-vibor-player);
+padding: 0;
 }
 
-        .nav-btn { width:50%; height: 100%; cursor: pointer; }
-        .nav-btn img { width: 100%; height: 100%; object-fit: contain; }
-        
-        /* Шторка подсчета */
-        .modal-overlay-bg {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;      
-            background-color: rgba(0, 0, 0, 0.5); z-index: 999; 
-            display: none; 
-        }
-        .modal-overlay-bg.open { display: block; }
-        
-        .bottom-sheet {
-            position: absolute; bottom: 0; left: 0; right: 0; 
-            background-image: var(--bg-bottom-sheet); 
-            background-size: 100% auto; 
-            background-position: top center;
-            background-repeat: no-repeat;
-            background-color: transparent;
-            height: 550px;
-
-            padding: 75px 25px 0px 25px;
-            transform: translateY(100%); 
-            transition: transform 0.3s ease-out; 
-            z-index: 1000; 
-            display: flex; 
-            flex-direction: column;
-        }
-        .bottom-sheet.open { transform: translateY(0); }
-        
-        .calc-player-badge {
-            position: absolute; background: transparent; border: none;
-            font-size: 35px; font-weight: bold; color: var(--bg-calc-player-badge); text-align: center;
-            top: 15px; left: 70px; width: 160px; z-index: 1010;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .calc-score-badge {
-            position: absolute; background: transparent; border: none;
-            font-size: 35px; font-weight: bold; color: var(--bg-calc-player-badge); text-align: center;
-            top: 15px; right: 130px; width: 0px; z-index: 1010; transform: translateX(50%);
-        }
-        
-        .btn-confirm-round { 
-            position: absolute; cursor: pointer; filter: drop-shadow(0px 3px 5px rgba(0,0,0,0.3));
-            z-index: 1020; bottom: 15px; right: 90px; width: 60px; height: 60px;         
-        }
-        
-        /* Стилизация кнопки переключения стороны Flip */
-        .btn-flip-side {
-            position: absolute; top: 465px; left: 45px; width: 65px; height: 65px;
-            cursor: pointer; z-index: 1020; display: none;
-        }
-        
-        .cards-scroll-area { 
-            overflow-y: auto; overflow-x: hidden; flex-grow: 1; margin-bottom: 0px; padding: 0px 5px; scrollbar-width: none;  width: 100%; 
-        }
-        .cards-scroll-area::-webkit-scrollbar { display: none; }
-        
-        .uno-cards-grid { 
-    display: grid; 
-    grid-template-columns: repeat(3, 1fr); 
-    gap: 0px; 
-    width: calc(100%-10px); 
-
-    margin: 0 auto; 
-    padding: 10px 0;
-    justify-content: center;
+/* Элементы калькулятора карт */
+.calc-player-badge {
+position: absolute; background: transparent; border: none;
+font-size: 35px; font-weight: bold; color: var(--bg-calc-player-badge); text-align: center;
+top: 15px; left: 70px; width: 160px; z-index: 1010;
+white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.uno-card-item { 
-    position: relative; 
-    aspect-ratio: 2/3; 
-    background: transparent; 
-    cursor: pointer; 
-    width: 100%; /* Заставляем карточку занимать всю ширину ячейки сетки */
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.calc-score-badge {
+ position: absolute; 
+ background: transparent; 
+ border: none;
+ font-size: 35px; 
+ font-weight: bold; 
+ color: var(--bg-calc-player-badge); 
+ text-align: center; 
+ top: 15px; 
+ left: 75%;
+ transform: translateX(-50%); 
+ width: 120px; 
+ z-index: 1010;
 }
-        
-        .uno-card-counter { 
-            position: absolute; top: -6px; right: -6px; background-image: url('kolvo_card.png'); background-size: 100% 100%;
-            background-position: center; background-repeat: no-repeat; color: #09BC00; font-size: 12px; font-weight: bold; 
-            width: 26px; height: 26px; display: none; justify-content: center; align-items: center; z-index: 5; text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
-        }
-        .uno-card-counter.active { display: flex; }
-        
-        /* Вкладка рейтинга */
-        .rating-scroll-container { width: 100%; display: flex; flex-direction: column; gap: 0px; padding: 10px 0px; margin-top: 15px; }
-.rating-player-row {
-    height: 160px;                 /* Твоя рабочая высота */
-    width: 100%;                  
-    background-size: contain;     
-    background-repeat: no-repeat; 
-    background-position: center;  
-    position: relative;           /* ВАЖНО: теперь это точка отсчета координат для текста внутри */
-    font-weight: bold;
+.btn-confirm-round {
+position: absolute; cursor: pointer; filter: drop-shadow(0px 3px 5px rgba(0,0,0,0.3));
+z-index: 1020; bottom: 15px; right: 90px; width: 60px; height: 60px;
+}
+.btn-flip-side {
+position: absolute; top: 474px; left: 47px; width: 67px; height: 67px;
+cursor: pointer; z-index: 1020; display: none;
+}
+.cards-scroll-area {
+overflow-y: auto; overflow-x: hidden; flex-grow: 1; margin-bottom: 0px; padding: 0px 5px; scrollbar-width: none; width: 100%;
+}
+.cards-scroll-area::-webkit-scrollbar { display: none; }
+.uno-cards-grid {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 10px;
+width: 100%;
+margin: 0 auto;
+padding: 10px 0 80px 0;
+justify-content: center;
+}
+.uno-card-item {
+position: relative;
+aspect-ratio: 2/3;
+background: transparent;
+cursor: pointer;
+width: 100%;
+display: flex;
+justify-content: center;
+align-items: center;
+}
+.uno-card-counter {
+position: absolute; top: -5px; right: -3px; background-image: url('kolvo_card.png');
+background-size: 100% 100%;
+background-position: center; background-repeat: no-repeat; color: #09BC00; font-size: 22px; font-weight: bold;
+width: 26px; height: 26px; display: none; justify-content: center; align-items: center;
+z-index: 5;
+}
+.uno-card-counter.active { display: flex; }
+
+/* Общий класс для зафиксированных шапок (рейтинг и настройки) */
+.sticky-header-image {
+  position: sticky;
+  top: -1px; 
+  z-index: 100;            
+  flex-shrink: 0;
+  align-self: center;      
+  width: 100%;             
+  max-width: 380px; 
+  height: 125px;             
+  margin: 0px auto 5px auto;
+  background-size: contain; 
+  background-repeat: no-repeat;
+  background-position: top center; 
 }
 
-/* СТИЛЬ ДЛЯ ИМЕНИ ИГРОКА (СВЕРХУ) */
-.rating-player-name {
-    position: absolute;
-    top: 29px;                    /* Расстояние от верхнего края плашки */
-    left: 175px;
-    font-size: 23px;
-    text-transform: uppercase;    /* Все буквы заглавные */
-    color: var(--bg-calc-player-badge-2);
+/* Индивидуальные фоны для шапок */
+.rating-title-image {
+  background-image: var(--bg-rating-header);
+}
+.settings-title-image {
+  background-image: var(--bg-settings-header);
 }
 
-/* СТИЛЬ ДЛЯ НОМЕРА В ТОПЕ (1, 2, 3...) */
-.rating-player-rank {
-    position: absolute;
-    bottom: 39px;                 /* Расстояние от нижнего края плашки */
-    left: 186px;                   /* Отступ от левого края (подбирай под рамку) */
-    font-size: 25px;
-    color: white;               /* Сделаем номер чуть золотистым, чтобы выделялся */
+.rating-scroll-container { 
+  width: 100%; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 0px;
+  padding: 0px 0px 20px 0px; 
+  margin-top: 0px; 
+}
+ .rating-player-row {
+ height: 160px; width: 100%;
+ position: relative; font-weight: bold;
+ overflow: hidden;
+ }
+ /* СЛОЙ 2: Рамка в рейтинге поверх фото */
+ .rating-row-frame {
+ position: absolute;
+ top: 0; left: 0; width: 100%; height: 100%;
+ background-size: contain; background-repeat: no-repeat; background-position: center;
+ z-index: 2;
+ pointer-events: none;
+ }
+ /* СЛОЙ 1: Подложка под вырез в плашке рейтинга */
+ .rating-row-photo {
+ position: absolute;
+ top: 25px; 
+ left: 32px; 
+ width: 100px; 
+ height: 100px; 
+ z-index: 1;
+ object-fit: cover;
+ border-radius: 0%;
+ background-color: #2c2c2c;
+ }
+ /* СЛОЙ 3: Текст рейтинга */
+ .rating-player-name {
+ position: absolute; top: 29px; left: 175px; font-size: 23px;
+ text-transform: uppercase; color: var(--bg-calc-player-badge-2);
+ z-index: 3;
+ }
+ .rating-player-rank {
+ position: absolute; bottom: 39px; left: 186px; font-size: 25px; color: white;
+ z-index: 3;
+ }
+ .rating-player-score {
+ position: absolute; bottom: 39px; right: 80px; font-size: 25px;
+ color: var(--bg-calc-player-badge-2);
+ z-index: 3;
+ }
+ .rank-1 { background-image: url('frame_player_gold.png'); }
+ .rank-2 { background-image: url('frame_player_silver.png'); }
+ .rank-3 { background-image: url('frame_player_copper.png'); }
+ .rank-other { background-image: url('frame_player.png'); }
+
+ .uno-card-item img { width: 100%; height: 100%; object-fit: contain; }
+
+/* Карточка с плюсом */
+.add-player-card {
+background-image: var(--bg-image-add-player);
+background-size: contain; background-repeat: no-repeat; background-position: center;
+aspect-ratio: 104/191; width: 104px; cursor: pointer;
+filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.25));
+margin: 0 auto;
 }
 
-/* СТИЛЬ ДЛЯ ОЧКОВ (НА ОДНОЙ СТРОКЕ С НОМЕРОМ, НО СПРАВА) */
-.rating-player-score {
-    position: absolute;
-    bottom: 39px;                 /* Точно такое же расстояние снизу, как и у номера */
-    right: 80px;                  /* Отступ от правого края */
-    font-size: 25px;
-    color: var(--bg-calc-player-badge-2);
+/* Контент внутри шторки выбора игроков */
+.player-selector-content { 
+width: 100%; height: 100%; padding: 27px 0px; box-sizing: border-box; display: flex; flex-direction: column; 
 }
-        .rank-1 { background-image: url('frame_player_gold.png'); }
-        .rank-2 { background-image: url('frame_player_silver.png'); }
-        .rank-3 { background-image: url('frame_player_copper.png'); }
-        .rank-other { background-image: url('frame_player.png'); }
-        .rating-points { color: #fff; font-size: 20px; }
-.uno-card-item img { 
-    width: 100%; /* Изменено с 120% на 100%, чтобы картинка не вылезала за края */
-    height: 100%; 
-    object-fit: contain; 
+.player-selector-header { color: #fff; font-size: 22px; font-weight: bold; text-align: center; margin-bottom: 0px; text-shadow: 1px 1px 3px black; }
+.player-selector-list {
+ flex: 1;
+ overflow-y: auto;
+ display: flex;
+ flex-direction: column; 
+ align-items: center; 
+ justify-content: flex-start; 
+ gap: 12px; 
+ padding: 20px 0px 40px;
+ margin-bottom: -50px;
+ scrollbar-width: none;
+ }
+ .player-selector-list::-webkit-scrollbar { display: none; }
+/* Вытянутая строка игрока */
+.player-selector-row {
+ width: 308px; min-width: 308px; max-width: 308px;
+ height: 115px; min-height: 115px; max-height: 115px;
+ display: flex; justify-content: center; align-items: center;
+ padding: 0 5px; box-sizing: border-box;
+ cursor: pointer; transition: filter 0.2s ease, transform 0.1s ease;
+ filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.25));
+ position: relative;
+ margin: 0;
+ z-index: 1;
 }
-    </style>
+.player-selector-row .player-photo-mini {
+ position: absolute;
+ top: 15px;
+ left: 28px;
+ width: 68px;
+ height: 85px;
+ background-color: #2c2c2c;
+ background-size: cover;
+ background-position: center;
+ background-repeat: no-repeat;
+ border-radius: 4px;
+ z-index: 1;
+}
+.player-selector-row::after {
+ content: "";
+ position: absolute;
+ top: 0; left: 0; width: 100%; height: 100%;
+ background-image: var(--bg-player-row-bg);
+ background-size: 100% 100%;
+ background-repeat: no-repeat;
+ z-index: 2;
+ pointer-events: none;
+}
+.player-selector-row.active::after {
+ background-image: var(--bg-player-row-active-bg);
+}
+.player-row-name {
+ color: var(--bg-calc-player-badge);
+ font-size: 18px;
+ font-weight: bold;
+ position: absolute;
+ top: 19px;
+ left: 210px;
+ transform: translateX(-50%);
+ z-index: 3;
+}
+.player-selector-ok-btn {
+position: absolute; bottom: 20px; left: 315px; top: 475px; width: 65px; height: 65px; background-image: var(--bg-button-ok); background-size: contain; background-repeat: no-repeat; cursor: pointer; z-index: 10;
+}
+.btn-confirm-round {
+ position: absolute; 
+ cursor: pointer; 
+ filter: drop-shadow(0px 3px 5px rgba(0,0,0,0.3));
+ z-index: 1020; 
+ bottom: 15px; 
+ right: 50px; 
+ width: 60px; height: 60px; 
+ background-image: var(--bg-btn-confirm);
+ background-size: contain;
+ background-repeat: no-repeat;
+ background-position: center;
+}
+
+/* СТИЛИ ДЛЯ РАСШИРЕННЫХ НАСТРОЕК */
+.settings-player-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 380px;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 12px 15px;
+  margin: 0 auto 10px auto;
+  border-radius: 12px;
+  color: white;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.settings-photo-preview {
+  width: 50px; height: 50px;
+  border-radius: 8px;
+  object-fit: cover;
+  background-color: #444;
+  border: 2px solid #fff;
+  cursor: pointer;
+}
+.settings-player-name-input {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  width: 130px;
+  text-transform: uppercase;
+}
+.settings-player-name-input:focus {
+  outline: none;
+  border-color: var(--bg-calc-player-badge);
+}
+.btn-upload-photo {
+  background: var(--bg-calc-player-badge);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 13px;
+}
+.btn-delete-player {
+  background: #E50000;
+  color: white;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 13px;
+}
+.btn-add-new-player-trigger {
+  display: block;
+  width: 100%;
+  max-width: 380px;
+  margin: 20px auto;
+  background: #24a122;
+  color: white;
+  border: none;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* Кнопка сброса рейтинга */
+.btn-reset-leaderboard {
+  display: block;
+  width: 100%;
+  max-width: 380px;
+  margin: 10px auto 10px auto;
+  background: #E50000;
+  color: white;
+  border: none;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: bold;
+  border-radius: 15px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+  text-transform: uppercase;
+  transition: background-color 0.2s;
+}
+.btn-reset-leaderboard:active {
+  background: #b30000;
+}
+
+/* Экран триумфа */
+.winner-fullscreen-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 5000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.winner-banner-img {
+  position: absolute;
+  z-index: 2;
+  top: 120px;
+  width: 90%;
+  max-width: 380px;
+  height: auto;
+  object-fit: contain;
+  margin-bottom: 0px;
+}
+.winner-photo {
+  position: absolute;
+  z-index: 1;
+  top: 130px;
+  width: 370px;
+  height: 465px;
+  object-fit: cover;
+  border-radius: 35px;
+  margin-bottom: 10px;
+  box-shadow: 0px 6px 15px rgba(0,0,0,0.6);
+  background-color: #2c2c2c;
+
+}
+.winner-name-text {
+  position: absolute;
+  top: 150px;
+  z-index: 2;
+  color: #fff;
+  font-size: 26px;
+  font-weight: bold;
+  margin-top: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+</style>
 </head>
-
 <body>
 <div class="app-container">
-    
-    <div id="version-deck-container" class="game-version-deck">
-        <div id="card-uno" class="version-card active-deck" data-version="UNO"><img src="text_current_version.png" alt="UNO"></div>
-        <div id="card-flip" class="version-card" data-version="UNO Flip"><img src="flip.png" alt="UNO Flip"></div>
-        <div id="card-dos" class="version-card" data-version="UNO Dos"><img src="dos.png" alt="UNO Dos"></div>
-    </div>
-
-    <div id="page-game" class="page active" style="padding-top: 120px;">
-        <div class="players-grid" id="players-list-target"></div>
-    </div>
-
-    <div id="page-rating" class="page">
-        <h2 style="color: white; margin-top: 20px; text-align: center;">Общий рейтинг</h2>
-        <div id="rating-list-target" class="rating-scroll-container"></div>
-    </div>
-
-    <div id="page-settings" class="page">
-        <h2 style="color: white; margin-top: 20px; text-align: center;">Настройки</h2>
-        <p style="color: #aaa; text-align: center;">Тут можно будет добавлять или удалять друзей.</p>
-    </div>
-
-    <div class="bottom-nav">
-<div class="nav-btn" id="btn-game">
-    <img id="img-nav-game" src="button_start.png" alt="Игра">
+<div id="version-deck-container" class="game-version-deck">
+<div id="card-uno" class="version-card active-deck" data-version="UNO"><img src="text_current_version.png" alt="UNO"></div>
+<div id="card-flip" class="version-card" data-version="UNO Flip"><img src="flip.png" alt="UNO Flip"></div>
+<div id="card-dos" class="version-card" data-version="UNO Dos"><img src="dos.png" alt="UNO Dos"></div>
+</div>
+<div id="page-game" class="page active" style="padding-top: 120px;">
+<div class="players-grid" id="main-players-grid"></div>
+</div>
+<div id="page-rating" class="page" style="padding-top: 0px;">
+   <div class="sticky-header-image rating-title-image"></div>
+   <div id="rating-list-target" class="rating-scroll-container"></div>
+</div>
+<div id="page-settings" class="page" style="padding-top: 0px;">
+   <div class="sticky-header-image settings-title-image"></div>
+   <div id="settings-players-list" style="width: 100%;"></div>
+   <button class="btn-add-new-player-trigger" id="btn-create-player">+ Добавить игрока</button>
+</div>
+<div class="bottom-nav">
+<div class="nav-btn" id="btn-game"><img id="img-nav-game" src="button_start.png" alt="Игра"></div>
+<div class="nav-btn" id="btn-rating"><img id="img-nav-rating" src="button_leaderboard.png" alt="Рейтинг"></div>
+<div class="nav-btn" id="btn-settings"><img id="img-nav-settings" src="button_settings.png" alt="Настройки"></div>
 </div>
 
-<div class="nav-btn" id="btn-rating">
-    <img id="img-nav-rating" src="button_leaderboard.png" alt="Рейтинг">
+<div id="modal-overlay" class="modal-overlay-bg">
+<div id="sheet-cards" class="bottom-sheet sheet-cards-bg">
+<div id="flip-side-btn" class="btn-flip-side">
+<img src="image_flip_btn.png" alt="Flip" style="width:100%; height:100%;">
+</div>
+<div id="modal-player-title" class="calc-player-badge">Игрок</div>
+<div id="modal-live-score" class="calc-score-badge">+0</div>
+<div class="cards-scroll-area">
+<div id="cards-grid-target" class="uno-cards-grid"></div>
+</div>
+<div id="btn-confirm" class="btn-confirm-round"></div>
+</div>
 </div>
 
-<div class="nav-btn" id="btn-settings">
-    <img id="img-nav-settings" src="button_settings.png" alt="Настройки">
+<div id="player-modal-overlay" class="modal-overlay-bg">
+ <div id="player-selector-menu" class="player-selector-menu player-selector-menu-bg">
+ <div class="player-selector-content">
+ <div id="player-selector-list" class="player-selector-list"></div>
+ <div id="player-selector-ok-btn" class="player-selector-ok-btn"></div>
+ </div>
+ </div>
 </div>
-    </div>
+</div>
 
-    <div id="modal-overlay" class="modal-overlay-bg">
-        <div id="sheet-cards" class="bottom-sheet">
-            <div id="flip-side-btn" class="btn-flip-side">
-                <img src="image_flip_btn.png" alt="Flip" style="width:100%; height:100%;">
-            </div>
-            <div id="modal-player-title" class="calc-player-badge">Игрок</div>
-            <div id="modal-live-score" class="calc-score-badge">+0</div>
-            <div class="cards-scroll-area">
-                <div id="cards-grid-target" class="uno-cards-grid"></div>
-<div id="btn-confirm" class="btn-confirm-round">
-    <img id="img-btn-ok" src="button_ok.png" alt="OK" style="width:100%; height:100%;">
-</div>
-    </div>
-</div>
+<input type="file" id="hidden-photo-input" accept="image/*" style="display:none;">
 
 <script>
-// Ждем загрузки DOM перед выполнением скрипта
 document.addEventListener('DOMContentLoaded', function() {
-    
-    // Глобальные переменные
-    var curPlayerId = null;
-    var currentRoundCounts = {};
-    var selectedVersion = "UNO"; 
-    var isDeckExpanded = false;
-    var isDarkSideActive = false; 
+var curPlayerId = null;
+var currentRoundCounts = {};
+var selectedVersion = "UNO";
+var isDeckExpanded = false;
+var isDarkSideActive = false;
+var photoTargetPlayerId = null;
 
-    // Данные игроков
-    var players = [
-        { id: 1, name: "ЯНА", score: 0, globalScore: 0 },
-        { id: 2, name: "ИЛЬЯ", score: 0, globalScore: 0 },
-        { id: 3, name: "ЖАННА", score: 0, globalScore: 0 },
-        { id: 4, name: "Игрок 4", score: 0, globalScore: 0 },
-        { id: 5, name: "Игрок 5", score: 0, globalScore: 0 },
-        { id: 6, name: "Игрок 6", score: 0, globalScore: 0 },
-        { id: 7, name: "Игрок 7", score: 0, globalScore: 0 },
-        { id: 8, name: "Игрок 8", score: 0, globalScore: 0 },
-        { id: 9, name: "Игрок 9", score: 0, globalScore: 0 }
-    ];
+function savePlayersToLocalStorage() {
+  var safeString = encodeURIComponent(JSON.stringify(players));
+  localStorage.setItem('uno_app_players_data', safeString);
+}
 
+var defaultPlayers = [
+{ id: 1, name: "ЯНА", score: 0, globalScore: 0, photo: "photo_5305306486818938491_y.jpg" },
+{ id: 2, name: "ИЛЬЯ", score: 0, globalScore: 0, photo: "photo_5305306486818938486_x.jpg" },
+{ id: 3, name: "ЖАННА", score: 0, globalScore: 0, photo: "photo_5305306486818938490_w.jpg" },
+{ id: 4, name: "CЕРЕЖА", score: 0, globalScore: 0, photo: "photo_5305306486818938494_x.jpg" },
+{ id: 5, name: "АНТОН", score: 0, globalScore: 0, photo: "photo_5305306486818938492_x.jpg" },
+{ id: 6, name: "МАША", score: 0, globalScore: 0, photo: "photo_5305306486818938478_m.jpg" },
+{ id: 7, name: "АКСА", score: 0, globalScore: 0, photo: "photo_5305306486818938480_m.jpg" },
+{ id: 8, name: "САНЯ", score: 0, globalScore: 0, photo: "photo_5305306486818938482_x.jpg" },
+{ id: 9, name: "ДАНИЛ", score: 0, globalScore: 0, photo: "photo_5308003928144287430_x.jpg" }
+];
+
+var cachedData = localStorage.getItem('uno_app_players_data');
+var players = defaultPlayers;
+
+if (cachedData) {
+  try {
+    players = JSON.parse(decodeURIComponent(cachedData));
+  } catch (e) {
+    console.error("Ошибка чтения кэша, сброс до дефолтных настроек", e);
+    players = defaultPlayers;
+  }
+}
+
+var activePlayerIds = [];
+var tempSelectedPlayerIds = [];
 var themeAssets = {
-    "UNO": {
-        btnGame: "button_start.png",
-        btnRating: "button_leaderboard.png",
-        btnSettings: "button_settings.png",
-        ratingTitle: "top.png",
-        btnOk: "button_ok.png"
-    },
-    "UNO Flip": {
-        btnGame: "button_start_f.png",
-        btnRating: "button_leaderboard_f.png",
-        btnSettings: "button_settings_f.png",
-        ratingTitle: "top_f.png",
-        btnOk: "button_ok_f.png"
-    },
-    "UNO Dos": {
-        btnGame: "button_start_d.png",
-        btnRating: "button_leaderboard_d.png",
-        btnSettings: "button_settings_d.png",
-        ratingTitle: "top_d.png",
-        btnOk: "button_ok_d.png"
-    }
+"UNO": { btnGame: "button_start.png", btnRating: "button_leaderboard.png", btnSettings: "button_settings.png", btnOk: "button_ok.png" },
+"UNO Flip": { btnGame: "button_start_f.png", btnRating: "button_leaderboard_f.png", btnSettings: "button_settings_f.png", btnOk: "button_ok_f.png" },
+"UNO Dos": { btnGame: "button_start_d.png", btnRating: "button_leaderboard_d.png", btnSettings: "button_settings_d.png", btnOk: "button_ok_d.png" }
+};
+var cardsData = {
+"UNO": [
+{ id: "c1", points: 1, img: "uno_1.jpg" }, { id: "c2", points: 2, img: "uno_2.jpg" },
+{ id: "c3", points: 3, img: "uno_3.jpg" }, { id: "c4", points: 4, img: "uno_4.jpg" },
+{ id: "c5", points: 5, img: "uno_5.jpg" }, { id: "c6", points: 6, img: "uno_6.jpg" },
+{ id: "c7", points: 7, img: "uno_7.jpg" }, { id: "c8", points: 8, img: "uno_8.jpg" },
+{ id: "c9", points: 9, img: "uno_9.jpg" }, { id: "c10", points: 20, img: "uno_10.jpg" },
+{ id: "c11", points: 50, img: "uno_11.jpg" }, { id: "c12", points: 20, img: "uno_12.jpg" },
+{ id: "c13", points: 20, img: "uno_13.jpg"}, { id: "c14", points: 50, img: "uno_14.jpg" }
+],
+"UNO Flip": [
+{ id: "c15", points: 1, img: "1f.jpg" }, { id: "c16", points: 2, img: "2f.jpg" },
+{ id: "c17", points: 3, img: "3f.jpg" }, { id: "c48", points: 4, img: "4f.jpg" },
+{ id: "c19", points: 5, img: "5f.jpg" }, { id: "c20", points: 6, img: "6f.jpg" },
+{ id: "c21", points: 7, img: "7f.jpg" }, { id: "c22", points: 8, img: "8f.jpg" },
+{ id: "c23", points: 9, img: "9f.jpg" }, { id: "c24", points: 10, img: "10f.png" },
+{ id: "c25", points: 40, img: "11f.jpg" }, { id: "c26", points: 20, img: "12f.jpg" },
+{ id: "c27", points: 20, img: "13f.jpg" }, { id: "c28", points: 50, img: "14f.png" },
+{ id: "c29", points: 20, img: "15f.png" }
+],
+"UNO Flip dark": [
+{ id: "c30", points: 1, img: "1f_.png" }, { id: "c31", points: 2, img: "2f_.png" },
+{ id: "c32", points: 3, img: "3f_.png" }, { id: "c33", points: 4, img: "4f_.png" },
+{ id: "c34", points: 5, img: "5f_.png" }, { id: "c35", points: 6, img: "6f_.png" },
+{ id: "c36", points: 7, img: "7f_.png" }, { id: "c37", points: 8, img: "8f_.png" },
+{ id: "c38", points: 9, img: "9f_.png" }, { id: "c39", points: 20, img: "10f_.png" },
+{ id: "c40", points: 40, img: "11f_.png" }, { id: "c41", points: 30, img: "12f_.png" },
+{ id: "c42", points: 20, img: "13f_.png" }, { id: "c43", points: 60, img: "14f_.png" },
+{ id: "c44", points: 20, img: "15f_.png" }
+],
+"UNO Dos": [
+{ id: "c45", points: 1, img: "1d.png" }, { id: "c46", points: 20, img: "2d.png" },
+{ id: "c47", points: 3, img: "3d.png" }, { id: "c48", points: 4, img: "4d.png" },
+{ id: "c49", points: 5, img: "5d.png" }, { id: "c50", points: 6, img: "6d.png" },
+{ id: "c51", points: 7, img: "7d.png" }, { id: "c52", points: 8, img: "8d.png" },
+{ id: "c53", points: 9, img: "9d.png" }, { id: "c54", points: 10, img: "10d.png" },
+{ id: "c55", points: 40, img: "11d.png" }
+]
 };
 
-    // Данные карт для разных версий игры
-    var cardsData = {
-        "UNO": [
-            { id: "c1", points: 1,  img: "uno_1.jpg" }, 
-            { id: "c2", points: 2,  img: "uno_2.jpg" }, 
-            { id: "c3", points: 3,  img: "uno_3.jpg" }, 
-            { id: "c4", points: 4,  img: "uno_4.jpg" }, 
-            { id: "c5", points: 5,  img: "uno_5.jpg" }, 
-            { id: "c6", points: 6,  img: "uno_6.jpg" }, 
-            { id: "c7", points: 7,  img: "uno_7.jpg" }, 
-            { id: "c8", points: 8,  img: "uno_8.jpg" }, 
-            { id: "c9"
-
-
-, points: 9,  img: "uno_9.jpg" }, 
-            { id: "c10", points: 20, img: "uno_10.jpg" }, 
-            { id: "c11", points: 50, img: "uno_11.jpg" }, 
-            { id: "c12", points: 20, img: "uno_12.jpg" }, 
-            { id: "c13", points: 20, img: "uno_13.jpg"}, 
-            { id: "c14", points: 50, img: "uno_14.jpg" }
-        ],
-        "UNO Flip": [
-            { id: "c15", points: 1,  img: "1f.jpg" }, 
-            { id: "c16", points: 2,  img: "2f.jpg" }, 
-            { id: "c17", points: 3,  img: "3f.jpg" }, 
-            { id: "c18", points: 4,  img: "4f.jpg" }, 
-            { id: "c19", points: 5,  img: "5f.jpg" }, 
-            { id: "c20", points: 6,  img: "6f.jpg" }, 
-            { id: "c21", points: 7,  img: "7f.jpg" }, 
-            { id: "c22", points: 8,  img: "8f.jpg" }, 
-            { id: "c23", points: 9,  img: "9f.jpg" }, 
-            { id: "c24", points: 10, img: "10f.png" }, 
-            { id: "c25", points: 40, img: "11f.jpg" }, 
-            { id: "c26", points: 20, img: "12f.jpg" }, 
-            { id: "c27", points: 20, img: "13f.jpg" },
-            { id: "c28", points: 50, img: "14f.png" },
-            { id: "c29", points: 20, img: "15f.png" }
-        ],
-        "UNO Flip dark": [
-            { id: "c30", points: 1,  img: "1f_.png" }, 
-            { id: "c31", points: 2,  img: "2f_.png" }, 
-            { id: "c32", points: 3,  img: "3f_.png" }, 
-            { id: "c33", points: 4,  img: "4f_.png" }, 
-            { id: "c34", points: 5,  img: "5f_.png" }, 
-            { id: "c35", points: 6,  img: "6f_.png" }, 
-            { id: "c36", points: 7,  img: "7f_.png" }, 
-            { id: "c37", points: 8,  img: "8f_.png" }, 
-            { id: "c38", points: 9,  img: "9f_.png" }, 
-            { id: "c39", points: 20, img: "10f_.png" }, 
-            { id: "c40", points: 40, img: "11f_.png" }, 
-            { id: "c41", points: 30, img: "12f_.png" }, 
-            { id: "c42", points: 20, img: "13f_.png" },
-            { id: "c43", points: 60, img: "14f_.png" },
-            { id: "c44", points: 20, img: "15f_.png" }
-        ],
-        "UNO Dos": [
-            { id: "c45", points: 1, img: "1d.png" },
-            { id: "c46", points: 20, img: "2d.png" },
-            { id: "c47", points: 3, img: "3d.png" },
-            { id: "c48", points: 4, img: "4d.png" },
-            { id: "c49", points: 5, img: "5d.png" },
-            { id: "c50", points: 6, img: "6d.png" },
-            { id: "c51", points: 7, img: "7d.png" },
-            { id: "c52", points: 8, img: "8d.png" },
-            { id: "c53", points: 9, img: "9d.png" },
-            { id: "c54", points: 10, img: "10d.png" },
-            { id: "c55", points: 40, img: "11d.png" }
-        ]
-    };
-
-    // Функция для получения правильного ключа колоды
-    function getActiveDeckKey() {
-        if (selectedVersion === "UNO Flip" && isDarkSideActive) {
-            return "UNO Flip dark";
-        }
-        return selectedVersion;
-    }
-
-    // Обработка клика по колоде выбора версии
-    function handleDeckClick(event) {
-        event.stopPropagation();
-        var deckContainer = document.getElementById('version-deck-container');
-        var clickedElement = event.target.closest('.version-card');
-        
-        if (!isDeckExpanded) {
-            // Раскрываем меню
-            deckContainer.classList.add('expanded');
-            isDeckExpanded = true;
-    } else if (clickedElement) {
-        var clickedVersion = clickedElement.getAttribute('data-version');
-        if (clickedVersion && clickedVersion !== selectedVersion) {
-                selectedVersion = clickedVersion;
-                isDarkSideActive = false;
-            
-            // --- ЭТОТ КУСОК К О Д А НАДО ДОБАВИТЬ СЮДА ---
-            // Меняем тему на самом body (CSS переключит фоны)
-            document.body.setAttribute('data-theme', selectedVersion);
-
-            
-            // Меняем иконки в HTML кнопках
-            var assets = themeAssets[selectedVersion];
-            if (assets) {
-                var imgGame = document.getElementById('img-nav-game');
-                var imgRating = document.getElementById('img-nav-rating');
-                var imgSettings = document.getElementById('img-nav-settings');
-                var imgTitle = document.getElementById('rating-title');
-                var imgOk = document.getElementById('img-btn-ok'); /* <-- 1. НАХОДИМ КНОПКУ ОК */
-                
-                if (imgGame) imgGame.src = assets.btnGame;
-                if (imgRating) imgRating.src = assets.btnRating;
-                if (imgSettings) imgSettings.src = assets.btnSettings;
-                if (imgTitle) imgTitle.src = assets.ratingTitle;
-                if (imgOk) imgOk.src = assets.btnOk; /* <-- 2. МЕНЯЕМ ЕЙ КАРТИНКУ */
-            }
-        }
-            
-            // Обновляем активный класс
-            var cards = deckContainer.getElementsByClassName('version-card');
-            for (var i = 0; i < cards.length; i++) {
-                var card = cards[i];
-                if (card.getAttribute('data-version') === selectedVersion) {
-
-
-card.className = "version-card active-deck";
-                } else {
-                    card.className = "version-card";
-                }
-            }
-            
-            deckContainer.classList.remove('expanded');
-            isDeckExpanded = false;
-            
-            // Обновляем отображение, если открыта шторка
-            if (curPlayerId !== null) {
-                renderCardsGrid();
-                updateLiveTotal();
-                updateFlipButtonVisibility();
-            }
-        } else {
-            // Клик не по карточке - закрываем меню
-            deckContainer.classList.remove('expanded');
-            isDeckExpanded = false;
-        }
-    }
-
-    // Отрисовка сетки игроков
-    function renderPlayers() {
-        var html = "";
-        for (var i = 0; i < players.length; i++) {
-            html += '<div class="player-card" data-player-id="' + players[i].id + '">' +
-                    '<div class="player-name-badge">' + players[i].name + '</div>' +
-                    '<div class="player-score">' + players[i].score + '</div>' +
-                    '</div>';
-        }
-        document.getElementById('players-list-target').innerHTML = html;
-        
-        // Добавляем обработчики событий
-        var playerCards = document.querySelectorAll('.player-card');
-        playerCards.forEach(function(card) {
-            card.addEventListener('click', function() {
-                var playerId = parseInt(this.getAttribute('data-player-id'));
-                openCardCalc(playerId);
-            });
-        });
-    }
-
-    // Отрисовка сетки карт в шторке
-    function renderCardsGrid() {
-        var html = "";
-        var currentKey = getActiveDeckKey();
-        var activeCards = cardsData[currentKey] || [];
-        
-        for (var i = 0; i < activeCards.length; i++) {
-            var card = activeCards[i];
-            var count = currentRoundCounts[card.id] || 0;
-            var activeClass = count > 0 ? ' active' : '';
-            html += '<div class="uno-card-item" data-card-id="' + card.id + '">' +
-                    '<div id="badge-' + card.id + '" class="uno-card-counter' + activeClass + '">' + count + '</div>' +
-                    '<img src="' + card.img + '" alt="Карта ' + card.points + ' очков">' +
-                    '</div>';
-        }
-        document.getElementById('cards-grid-target').innerHTML = html;
-        
-        // Добавляем обработчики событий для карт
-        var cardItems = document.querySelectorAll('.uno-card-item');
-        cardItems.forEach(function(item) {
-            item.addEventListener('click', function() {
-                var cardId = this.getAttribute('data-card-id');
-                clickCard(cardId);
-            });
-        });
-    }
-
-    // Обработка клика по карте
-    function clickCard(cardId) {
-        if (!currentRoundCounts[cardId]) { 
-            currentRoundCounts[cardId] = 0; 
-        }
-        currentRoundCounts[cardId]++;
-        
-        var badge = document.getElementById('badge-' + cardId);
-        if(badge) {
-            badge.innerText = currentRoundCounts[cardId];
-            badge.classList.add('active');
-        }
-        updateLiveTotal();
-    }
-
-    // Обновление общей суммы очков
-    function updateLiveTotal() {
-        var currentTotal = 0;
-        var currentKey = getActiveDeckKey();
-        var activeCards = cardsData[currentKey] || [];
-        
-        for (var i = 0; i < activeCards.length; i++) {
-            var card = activeCards[i];
-            var count = currentRoundCounts[card.id] || 0;
-            currentTotal += count * card.points;
-        }
-        document.getElementById('modal-live-score').innerText = "+" + currentTotal;
-    }
-
-    // Обновление видимости кнопки Flip
-    function updateFlipButtonVisibility() {
-        var flipBtn = document.getElementById('flip-side-btn');
-        if (selectedVersion === "UNO Flip") {
-            flipBtn.style.display = "block";
-        } else {
-            flipBtn.style.display = "none";
-
-
-isDarkSideActive = false;
-        }
-    }
-
-    // Открытие калькулятора карт для игрока
-    function openCardCalc(id) {
-        curPlayerId = id;
-        
-        // Находим игрока
-        var player = null;
-        for (var i = 0; i < players.length; i++) {
-            if (players[i].id === id) { 
-                player = players[i]; 
-                break; 
-            }
-        }
-        
-        if(player) {
-            document.getElementById('modal-player-title').innerText = player.name;
-        }
-        
-        // Сбрасываем счетчики
-        currentRoundCounts = {};
-        document.getElementById('modal-live-score').innerText = "+0";
-        
-        // Обновляем видимость кнопки Flip
-        updateFlipButtonVisibility();
-        
-        // Отрисовываем карты
-        renderCardsGrid();
-        
-        // Открываем шторку
-        openSheet();
-    }
-
-    // Подтверждение раунда
-    function confirmRoundScore() {
-        var roundTotal = 0;
-        var currentKey = getActiveDeckKey();
-        var activeCards = cardsData[currentKey] || [];
-        
-        // Считаем общую сумму
-        for (var i = 0; i < activeCards.length; i++) {
-            var card = activeCards[i];
-            var count = currentRoundCounts[card.id] || 0;
-            roundTotal += count * card.points;
-        }
-        
-        // Начисляем очки игроку
-        if (curPlayerId !== null) {
-            for (var j = 0; j < players.length; j++) {
-                if (players[j].id === curPlayerId) {
-                    players[j].score += roundTotal;
-                    break;
-                }
-            }
-            
-            // Проверяем окончание партии
-            var partyOver = false;
-            for (var k = 0; k < players.length; k++) {
-                if (players[k].score >= 500) { 
-                    partyOver = true; 
-                    break; 
-                }
-            }
-            
-            if (partyOver) {
-                alert("Партия окончена! Кто-то набрал больше 500 очков. Результаты перенесены в рейтинг.");
-                for (var m = 0; m < players.length; m++) {
-                    players[m].globalScore += players[m].score; 
-                    players[m].score = 0; 
-                }
-            }
-            
-            // Сбрасываем текущего игрока
-            curPlayerId = null;
-        }
-        
-        renderPlayers(); 
-        closeSheet(); 
-    }
-
-    // Переключение стороны в UNO Flip
-    function toggleFlipSide() {
-        if (selectedVersion === "UNO Flip") {
-            isDarkSideActive = !isDarkSideActive;
-            renderCardsGrid();
-            updateLiveTotal();
-        }
-    }
-
-    // Обновление таблицы лидеров
-function updateLeaderboard() {
-    var sorted = players.slice();
-    sorted.sort(function(a, b) { 
-        return b.globalScore - a.globalScore; 
-    });
-    
-    var html = "";
-    for (var i = 0; i < sorted.length; i++) {
-        var player = sorted[i];
-        var frameImgClass;
-        if (i === 0) {
-            frameImgClass = "rank-1";
-        } else if (i === 1) {
-            frameImgClass = "rank-2";
-        } else if (i === 2) {
-            frameImgClass = "rank-3";
-        } else {
-            frameImgClass = "rank-other";
-        }
-        
-        // Сборка новой структуры: имя отдельно сверху, номер и очки на одной строчке снизу
-        html += '<div class="rating-player-row ' + frameImgClass + '">' +
-                    '<div class="rating-player-name">' + player.name + '</div>' +
-                    '<div class="rating-player-rank">' + (i + 1) + '</div>' +  
-                    '<div class="rating-player-score">' + player.globalScore + '</div>' +            
-                '</div>';
-    }
-    document.getElementById('rating-list-target').innerHTML = html;
+function getActiveDeckKey() {
+if (selectedVersion === "UNO Flip" && isDarkSideActive) {
+return "UNO Flip dark";
 }
-    // Переключение страниц
-    function switchPage(pageId) {
-        document.getElementById('page-game').classList.remove('active');
-        document.getElementById('page-rating').classList.remove('active');
-        document.getElementById('page-settings').classList.remove('active');
+return selectedVersion;
+}
 
+function renderMainGrid() {
+var grid = document.getElementById('main-players-grid');
+grid.innerHTML = '';
+players.forEach(function(player) {
+if (activePlayerIds.includes(player.id)) {
+var playerCard = document.createElement('div');
+playerCard.className = 'player-card';
+var imgSrc = player.photo ? player.photo : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+playerCard.innerHTML = `
+<img class="player-photo" src="${imgSrc}" alt="">
+<div class="player-card-frame"></div>
+<div class="player-name-badge">${player.name}</div>
+<div class="player-score">${player.score}</div>
+`;
+playerCard.addEventListener('click', function() {
+openCardCalc(player.id);
+});
+grid.appendChild(playerCard);
+}
+});
+var addCard = document.createElement('div');
+addCard.className = 'add-player-card';
+addCard.addEventListener('click', function(e) {
+e.stopPropagation();
+openPlayerSelectorMenu();
+});
+grid.appendChild(addCard);
+}
 
+function openPlayerSelectorMenu() {
+tempSelectedPlayerIds = [...activePlayerIds];
+var listContainer = document.getElementById('player-selector-list');
+listContainer.innerHTML = '';
+players.forEach(function(player) {
+var row = document.createElement('div');
+row.className = 'player-selector-row';
+if (tempSelectedPlayerIds.includes(player.id)) {
+row.classList.add('active');
+}
+var photoDiv = document.createElement('div');
+photoDiv.className = 'player-photo-mini';
+if (player.photo) {
+ photoDiv.style.backgroundImage = "url('" + player.photo + "')";
+}
+row.appendChild(photoDiv);
+var nameLabel = document.createElement('div');
+nameLabel.className = 'player-row-name';
+nameLabel.innerText = player.name;
+row.appendChild(nameLabel);
+row.addEventListener('click', function() {
+if (tempSelectedPlayerIds.includes(player.id)) {
+var index = tempSelectedPlayerIds.indexOf(player.id);
+tempSelectedPlayerIds.splice(index, 1);
+row.classList.remove('active');
+} else {
+tempSelectedPlayerIds.push(player.id);
+row.classList.add('active');
+}
+});
+listContainer.appendChild(row);
+});
+var playerOverlay = document.getElementById('player-modal-overlay');
+if (playerOverlay) playerOverlay.classList.add('open');
+setTimeout(function() {
+ var playerMenu = document.getElementById('player-selector-menu');
+ if (playerMenu) playerMenu.classList.add('open');
+}, 10);
+}
+
+function closePlayerSelectorMenu() {
+ var playerMenu = document.getElementById('player-selector-menu');
+ if (playerMenu) playerMenu.classList.remove('open');
+ setTimeout(function() {
+ var playerOverlay = document.getElementById('player-modal-overlay');
+ if (playerOverlay) playerOverlay.classList.remove('open');
+ }, 300);
+}
+
+document.getElementById('player-selector-ok-btn').addEventListener('click', function() {
+activePlayerIds = [...tempSelectedPlayerIds];
+closePlayerSelectorMenu();
+renderMainGrid();
+});
+
+function handleDeckClick(event) {
+event.stopPropagation();
+var deckContainer = document.getElementById('version-deck-container');
+var clickedElement = event.target.closest('.version-card');
+if (!isDeckExpanded) {
+deckContainer.classList.add('expanded');
+isDeckExpanded = true;
+} else if (clickedElement) {
+var clickedVersion = clickedElement.getAttribute('data-version');
+if (clickedVersion && clickedVersion !== selectedVersion) {
+selectedVersion = clickedVersion;
+isDarkSideActive = false;
+document.body.setAttribute('data-theme', selectedVersion);
+var assets = themeAssets[selectedVersion];
+if (assets) {
+var imgGame = document.getElementById('img-nav-game');
+var imgRating = document.getElementById('img-nav-rating');
+var imgSettings = document.getElementById('img-nav-settings');
+if (imgGame) imgGame.src = assets.btnGame;
+if (imgRating) imgRating.src = assets.btnRating;
+if (imgSettings) imgSettings.src = assets.btnSettings;
+}
+}
+var cards = deckContainer.getElementsByClassName('version-card');
+for (var i = 0; i < cards.length; i++) {
+var card = cards[i];
+if (card.getAttribute('data-version') === selectedVersion) {
+card.className = "version-card active-deck";
+} else {
+card.className = "version-card";
+}
+}
+deckContainer.classList.remove('expanded');
+isDeckExpanded = false;
+if (curPlayerId !== null) {
+renderCardsGrid();
+updateLiveTotal();
+updateFlipButtonVisibility();
+}
+} else {
+deckContainer.classList.remove('expanded');
+isDeckExpanded = false;
+}
+}
+
+function renderCardsGrid() {
+var html = "";
+var currentKey = getActiveDeckKey();
+var activeCards = cardsData[currentKey] || [];
+for (var i = 0; i < activeCards.length; i++) {
+var card = activeCards[i];
+var count = currentRoundCounts[card.id] || 0;
+var activeClass = count > 0 ? ' active' : '';
+html += '<div class="uno-card-item" data-card-id="' + card.id + '">' +
+'<div id="badge-' + card.id + '" class="uno-card-counter' + activeClass + '">' +
+count + '</div>' +
+'<img src="' + card.img + '" alt="Карта ' + card.points + ' очков">' +
+'</div>';
+}
+document.getElementById('cards-grid-target').innerHTML = html;
+var cardItems = document.querySelectorAll('.uno-card-item');
+cardItems.forEach(function(item) {
+item.addEventListener('click', function() {
+var cardId = this.getAttribute('data-card-id');
+clickCard(cardId);
+});
+});
+}
+
+function clickCard(cardId) {
+if (!currentRoundCounts[cardId]) {
+currentRoundCounts[cardId] = 0;
+}
+currentRoundCounts[cardId]++;
+var badge = document.getElementById('badge-' + cardId);
+if(badge) {
+badge.innerText = currentRoundCounts[cardId];
+badge.classList.add('active');
+}
+updateLiveTotal();
+}
+
+function updateLiveTotal() {
+var currentTotal = 0;
+var currentKey = getActiveDeckKey();
+var activeCards = cardsData[currentKey] || [];
+for (var i = 0; i < activeCards.length; i++) {
+var card = activeCards[i];
+var count = currentRoundCounts[card.id] || 0;
+currentTotal += count * card.points;
+}
+document.getElementById('modal-live-score').innerText = "+" + currentTotal;
+}
+
+function updateFlipButtonVisibility() {
+var flipBtn = document.getElementById('flip-side-btn');
+if (selectedVersion === "UNO Flip") {
+flipBtn.style.display = "block";
+} else {
+flipBtn.style.display = "none";
+isDarkSideActive = false;
+}
+}
+
+function openCardCalc(id) {
+curPlayerId = id;
+var player = null;
+for (var i = 0; i < players.length; i++) {
+if (players[i].id === id) {
+player = players[i];
+break;
+}
+}
+if(player) {
+document.getElementById('modal-player-title').innerText = player.name;
+}
+currentRoundCounts = {};
+document.getElementById('modal-live-score').innerText = "+0";
+updateFlipButtonVisibility();
+renderCardsGrid();
+openSheet();
+}
+
+function showWinnerOverlay(winnerPlayer) {
+  var bannerImgSrc = "winner.png";
+  if (selectedVersion === "UNO Flip") bannerImgSrc = "winner_f.png";
+  if (selectedVersion === "UNO Dos") bannerImgSrc = "winner_d.png";
+
+  var overlay = document.createElement('div');
+  overlay.className = 'winner-fullscreen-overlay';
+
+  var winnerPhotoSrc = winnerPlayer.photo ? winnerPlayer.photo : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
+  overlay.innerHTML = `
+    <img src="${bannerImgSrc}" class="winner-banner-img" alt="Winner!">
+    <img src="${winnerPhotoSrc}" class="winner-photo" alt="">
+    <div class="winner-name-text">${winnerPlayer.name}</div>
+  `;
+
+  overlay.addEventListener('click', function() {
+    overlay.remove();
+    switchPage('page-game');
+  });
+
+  document.body.appendChild(overlay);
+}
+
+function confirmRoundScore() {
+var roundTotal = 0;
+var currentKey = getActiveDeckKey();
+var activeCards = cardsData[currentKey] || [];
+for (var i = 0; i < activeCards.length; i++) {
+var card = activeCards[i];
+var count = currentRoundCounts[card.id] || 0;
+roundTotal += count * card.points;
+}
+if (curPlayerId !== null) {
+for (var j = 0; j < players.length; j++) {
+if (players[j].id === curPlayerId) {
+players[j].score += roundTotal;
+break;
+}
+}
+var targetLimit = (selectedVersion === "UNO Dos") ? 200 : 500;
+var partyOver = false;
+
+for (var k = 0; k < players.length; k++) {
+if (activePlayerIds.includes(players[k].id) && players[k].score >= targetLimit) {
+partyOver = true;
+break;
+}
+}
+if (partyOver) {
+var winnerPlayer = null;
+var maxScore = -1; // Исправлено: теперь ищем максимальный счет
+
+// 1. Ищем МАКСИМАЛЬНЫЙ счет (тот, кто пробил лимит)
+players.forEach(function(p) {
+  if (activePlayerIds.includes(p.id)) {
+    if (p.score > maxScore) {
+      maxScore = p.score;
+    }
+  }
+});
+
+// 2. Находим конкретного победителя, набравшего этот счет
+for (var x = 0; x < players.length; x++) {
+  if (activePlayerIds.includes(players[x].id) && players[x].score === maxScore) {
+    winnerPlayer = players[x];
+    break; // Нашли нужного игрока по ID
+  }
+}
+
+// Замораживаем данные победителя для экрана
+var frozenWinner = {
+  name: winnerPlayer ? winnerPlayer.name : "ПОБЕДИТЕЛЬ",
+  photo: winnerPlayer ? winnerPlayer.photo : ""
+};
+
+for (var m = 0; m < players.length; m++) {
+players[m].globalScore += players[m].score;
+players[m].score = 0;
+}
+
+showWinnerOverlay(frozenWinner);
+}
+curPlayerId = null;
+}
+savePlayersToLocalStorage();
+renderMainGrid();
+closeSheet();
+}
+
+function toggleFlipSide() {
+if (selectedVersion === "UNO Flip") {
+isDarkSideActive = !isDarkSideActive;
+renderCardsGrid();
+updateLiveTotal();
+}
+}
+
+function updateLeaderboard() {
+var sorted = [];
+players.forEach(function(p) { sorted.push(p); });
+sorted.sort(function(a, b) { return b.globalScore - a.globalScore; });
+var html = "";
+for (var i = 0; i < sorted.length; i++) {
+var player = sorted[i];
+var frameImgClass;
+if (i === 0) frameImgClass = "rank-1";
+else if (i === 1) frameImgClass = "rank-2";
+else if (i === 2) frameImgClass = "rank-3";
+else frameImgClass = "rank-other";
+var imgSrc = player.photo ? player.photo : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+html += '<div class="rating-player-row">' +
+'<img class="rating-row-photo" src="' + imgSrc + '" alt="">' +
+'<div class="rating-row-frame ' + frameImgClass + '"></div>' +
+'<div class="rating-player-name">' + player.name + '</div>' +
+'<div class="rating-player-rank">' + (i + 1) + '</div>' +
+'<div class="rating-player-score">' + player.globalScore + '</div>' +
+'</div>';
+}
+
+html += '<button class="btn-reset-leaderboard" id="btn-reset-scores">Сбросить статистику</button>';
+
+document.getElementById('rating-list-target').innerHTML = html;
+
+document.getElementById('btn-reset-scores').addEventListener('click', function() {
+  if (confirm("Вы уверены, что хотите полностью сбросить глобальный рейтинг всех игроков? Это действие необратимо.")) {
+    players.forEach(function(p) {
+      p.globalScore = 0;
+      p.score = 0;
+    });
+    savePlayersToLocalStorage();
+    updateLeaderboard();
+    renderMainGrid();
+  }
+});
+}
+
+function renderSettingsPlayers() {
+  var container = document.getElementById('settings-players-list');
+  container.innerHTML = '';
+  players.forEach(function(player) {
+    var item = document.createElement('div');
+    item.className = 'settings-player-item';
+    var previewSrc = player.photo ? player.photo : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    item.innerHTML = `
+      <div style="display:flex; align-items:center; gap:12px;">
+        <img class="settings-photo-preview" src="${previewSrc}" data-id="${player.id}" title="Изменить фото">
+        <input type="text" class="settings-player-name-input" data-id="${player.id}" value="${player.name}">
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button class="btn-upload-photo" data-id="${player.id}">Фото</button>
+        <button class="btn-delete-player" data-id="${player.id}">Удалить</button>
+      </div>
+    `;
+    container.appendChild(item);
+  });
+  
+  var nameInputs = container.querySelectorAll('.settings-player-name-input');
+  nameInputs.forEach(function(input) {
+    input.addEventListener('input', function() {
+      var pId = parseInt(this.getAttribute('data-id'));
+      var newName = this.value.trim().toUpperCase();
+      if (newName.length > 0) {
+        for (var i = 0; i < players.length; i++) {
+          if (players[i].id === pId) {
+            players[i].name = newName;
+            break;
+          }
+        }
+        savePlayersToLocalStorage();
+      }
+    });
+  });
+
+  var uploadButtons = container.querySelectorAll('.btn-upload-photo');
+  var previews = container.querySelectorAll('.settings-photo-preview');
+  
+  function triggerPhotoSelect() {
+    photoTargetPlayerId = parseInt(this.getAttribute('data-id'));
+    document.getElementById('hidden-photo-input').click();
+  }
+  
+  uploadButtons.forEach(function(btn) { btn.addEventListener('click', triggerPhotoSelect); });
+  previews.forEach(function(img) { img.addEventListener('click', triggerPhotoSelect); });
+
+  var deleteButtons = container.querySelectorAll('.btn-delete-player');
+  deleteButtons.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var pId = parseInt(this.getAttribute('data-id'));
+      var pName = "";
+      for(var i=0; i<players.length; i++) {
+        if(players[i].id === pId) { pName = players[i].name; break; }
+      }
+      if (confirm("Вы уверены, что хотите полностью удалить игрока " + pName + "?")) {
+        players = players.filter(function(p) { return p.id !== pId; });
+        activePlayerIds = activePlayerIds.filter(function(id) { return id !== pId; });
+        savePlayersToLocalStorage();
+        renderSettingsPlayers();
+        renderMainGrid();
+      }
+    });
+  });
+}
+
+document.getElementById('btn-create-player').addEventListener('click', function() {
+  var defaultNewName = "ИГРОК " + (players.length + 1);
+  var promptName = prompt("Введите имя нового участника:", defaultNewName);
+  if (promptName === null) return;
+  var finalName = promptName.trim().toUpperCase();
+  if (finalName.length === 0) finalName = defaultNewName;
+  
+  var maxId = 0;
+  players.forEach(function(p) { if(p.id > maxId) maxId = p.id; });
+  var newId = maxId + 1;
+  
+  players.push({ id: newId, name: finalName, score: 0, globalScore: 0, photo: "" });
+  savePlayersToLocalStorage();
+  renderSettingsPlayers();
+  renderMainGrid();
+});
+
+document.getElementById('hidden-photo-input').addEventListener('change', function(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(event) {
+    var base64Img = event.target.result;
+    for (var i = 0; i < players.length; i++) {
+      if (players[i].id === photoTargetPlayerId) {
+        players[i].photo = base64Img;
+        break;
+      }
+    }
+    savePlayersToLocalStorage();
+    renderSettingsPlayers();
+    renderMainGrid();
+  };
+  reader.readAsDataURL(file);
+});
+
+function switchPage(pageId) {
+document.getElementById('page-game').classList.remove('active');
+document.getElementById('page-rating').classList.remove('active');
+document.getElementById('page-settings').classList.remove('active');
 document.getElementById(pageId).classList.add('active');
-        
-        var deckContainer = document.getElementById('version-deck-container');
-        if (deckContainer) {
-            if(pageId === 'page-game') {
-                deckContainer.style.visibility = 'visible';
-                deckContainer.style.opacity = '1';
-                deckContainer.style.pointerEvents = 'auto'; 
-            } else {
-                deckContainer.style.visibility = 'hidden';
-                deckContainer.style.opacity = '0';
-                deckContainer.style.pointerEvents = 'none'; 
-            }
-            deckContainer.classList.remove('expanded');
-            isDeckExpanded = false;
-        }
-        
-        if(pageId === 'page-rating') {
-            updateLeaderboard();
-        }
-        
-        closeSheet();
-    }
+var deckContainer = document.getElementById('version-deck-container');
+if (deckContainer) {
+if(pageId === 'page-game') {
+deckContainer.style.visibility = 'visible';
+deckContainer.style.opacity = '1';
+deckContainer.style.pointerEvents = 'auto';
+} else {
+deckContainer.style.visibility = 'hidden';
+deckContainer.style.opacity = '0';
+deckContainer.style.pointerEvents = 'none';
+}
+deckContainer.classList.remove('expanded');
+isDeckExpanded = false;
+}
+if(pageId === 'page-rating') { updateLeaderboard(); }
+if(pageId === 'page-settings') { renderSettingsPlayers(); }
+closeSheet();
+closePlayerSelectorMenu();
+}
 
-    // Управление шторкой
-    function openSheet() { 
-        var overlay = document.getElementById('modal-overlay');
-        if (overlay) overlay.classList.add('open');
-        
-        setTimeout(function() {
-            var sheet = document.getElementById('sheet-cards');
-            if (sheet) sheet.classList.add('open'); 
-        }, 10);
-    }
+function openSheet() {
+var overlay = document.getElementById('modal-overlay');
+if (overlay) overlay.classList.add('open');
+setTimeout(function() {
+var sheet = document.getElementById('sheet-cards');
+if (sheet) sheet.classList.add('open');
+}, 10);
+}
 
-    function closeSheet() { 
-        var sheet = document.getElementById('sheet-cards');
-        if (sheet) sheet.classList.remove('open'); 
-        
-        setTimeout(function() {
-            var overlay = document.getElementById('modal-overlay');
-            if (overlay) overlay.classList.remove('open');
-        }, 300); 
-    }
+function closeSheet() {
+var sheet = document.getElementById('sheet-cards');
+if (sheet) sheet.className = 'bottom-sheet sheet-cards-bg';
+setTimeout(function() {
+var overlay = document.getElementById('modal-overlay');
+if (overlay) overlay.classList.remove('open');
+}, 300);
+}
 
-    // Назначаем обработчики событий
-    var deckContainer = document.getElementById('version-deck-container');
-    deckContainer.addEventListener('click', handleDeckClick);
-    
-    document.getElementById('modal-overlay').addEventListener('click', closeSheet);
-    document.getElementById('sheet-cards').addEventListener('click', function(event) {
-        event.stopPropagation();
-    });
-    
-    document.getElementById('flip-side-btn').addEventListener('click', toggleFlipSide);
-    document.getElementById('btn-confirm').addEventListener('click', confirmRoundScore);
-    
-    document.getElementById('btn-game').addEventListener('click', function() {
-        switchPage('page-game');
-    });
-    
-    document.getElementById('btn-rating').addEventListener('click', function() {
-        switchPage('page-rating');
-    });
-    
-    document.getElementById('btn-settings').addEventListener('click', function() {
-        switchPage('page-settings');
-    });
-    
-    // Закрытие меню при клике вне его
-    document.addEventListener('click', function(event) {
-        if (isDeckExpanded && deckContainer && !deckContainer.contains(event.target)) {
-            deckContainer.classList.remove('expanded');
-            isDeckExpanded = false;
-        }
-    });
+var deckContainer = document.getElementById('version-deck-container');
+deckContainer.addEventListener('click', handleDeckClick);
+document.getElementById('modal-overlay').addEventListener('click', closeSheet);
+document.getElementById('sheet-cards').addEventListener('click', function(event) { event.stopPropagation(); });
+document.getElementById('player-modal-overlay').addEventListener('click', closePlayerSelectorMenu);
+document.getElementById('player-selector-menu').addEventListener('click', function(event) { event.stopPropagation(); });
+document.getElementById('flip-side-btn').addEventListener('click', toggleFlipSide);
+document.getElementById('btn-confirm').addEventListener('click', confirmRoundScore);
+document.getElementById('btn-game').addEventListener('click', function() { switchPage('page-game'); });
+document.getElementById('btn-rating').addEventListener('click', function() { switchPage('page-rating'); });
+document.getElementById('btn-settings').addEventListener('click', function() { switchPage('page-settings'); });
+document.addEventListener('click', function(event) {
+if (isDeckExpanded && deckContainer && !deckContainer.contains(event.target)) {
+deckContainer.classList.remove('expanded');
+isDeckExpanded = false;
+}
+});
 
-    // Инициализация
-    renderPlayers();
-    
+renderMainGrid();
 });
 </script>
 </body>
