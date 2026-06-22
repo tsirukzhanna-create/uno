@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>UNO Counter</title>
 <style>
-/* Сюда добавлено свойство, отключающее голубой квадрат при нажатии */
 * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent !important; }
 body {
 margin: 0; padding: 0; font-family: Arial, sans-serif;
@@ -88,19 +87,9 @@ opacity: 0;
 z-index: 10;
 }
 .version-card img { width: 100%; display: block; }
-/* Активная карта в закрытом состоянии */
-.version-card.active-deck {
-z-index: 40;
-opacity: 1;
-transform: translateY(0);
-}
-/* При раскрытии меню */
-.game-version-deck.expanded {
-z-index: 400;
-}
-.game-version-deck.expanded .version-card {
-opacity: 1;
-}
+.version-card.active-deck { z-index: 40; opacity: 1; transform: translateY(0); }
+.game-version-deck.expanded { z-index: 400; }
+.game-version-deck.expanded .version-card { opacity: 1; }
 .game-version-deck.expanded .version-card[data-version="UNO"] { transform: translateY(250px); z-index: 10; }
 .game-version-deck.expanded .version-card[data-version="UNO Dos"] { transform: translateY(130px); z-index: 20; }
 .game-version-deck.expanded .version-card[data-version="UNO Flip"] { transform: translateY(10px); z-index: 40; }
@@ -121,488 +110,142 @@ scrollbar-width: none;
 .page::-webkit-scrollbar { display: none; }
 .page.active { display: flex; }
 
-/* Сетка игроков */
 .players-grid {
-display: grid;
-grid-template-columns: repeat(3, 104px);
-justify-content: center;
-gap: 18px;
-width: 100%;
-max-width: 380px;
-margin: 20px auto 0 auto;
-padding: 0 10px;
-position: relative;
-z-index: 50;
+display: grid; grid-template-columns: repeat(3, 104px); justify-content: center; gap: 18px;
+width: 100%; max-width: 380px; margin: 20px auto 0 auto; padding: 0 10px; position: relative; z-index: 50;
 }
-/* Карточка игрока (Контейнер-бутерброд) */
 .player-card {
-width: 104px; 
-height: 191px; 
-box-sizing: border-box;
-margin: 0 auto;
-position: relative;
-display: flex;
-flex-direction: column;
-justify-content: space-between;
-align-items: center;
-cursor: pointer;
-filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.25));
+width: 104px; height: 191px; box-sizing: border-box; margin: 0 auto; position: relative;
+display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+cursor: pointer; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.25));
 }
-/* СЛОЙ 2: Рамка поверх фотографии */
 .player-card-frame {
-position: absolute;
-top: 0; left: 0; width: 100%; height: 100%;
-background-image: url('image_player_card.png');
-background-size: 100% 100%;
-background-repeat: no-repeat;
-z-index: 2;
-pointer-events: none;
+position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+background-image: url('image_player_card.png'); background-size: 100% 100%; background-repeat: no-repeat;
+z-index: 2; pointer-events: none;
 }
-/* СЛОЙ 1: Фотография под рамкой */
 .player-photo {
-position: absolute;
-top: 40px; left: 13px; width: 75%; height: 70%;
-z-index: 1;
-object-fit: cover;
-background-color: #2c2c2c;
+position: absolute; top: 40px; left: 13px; width: 75%; height: 70%; z-index: 1; object-fit: cover; background-color: #2c2c2c;
 }
-/* СЛОЙ 3: Информационные элементы */
 .player-name-badge {
-position: absolute;
-top: 7px; left: 0; right: 0;
-color: var(--bg-calc-player-badge-2); font-size: 15px; font-weight: bold; text-align: center; padding: 0 5px;
-white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-z-index: 3;
+position: absolute; top: 7px; left: 0; right: 0; color: var(--bg-calc-player-badge-2); font-size: 15px; font-weight: bold; text-align: center; padding: 0 5px;
+white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 3;
 }
 .player-score {
-position: absolute; bottom: 10px; left: 0; right: 0;
-text-align: center; color: var(--bg-calc-player-badge-2); font-size: 20px; font-weight: bold;
-z-index: 3;
+position: absolute; bottom: 10px; left: 0; right: 0; text-align: center; color: var(--bg-calc-player-badge-2); font-size: 20px; font-weight: bold; z-index: 3;
 }
-/* Нижнее меню навигации */
 .bottom-nav {
-position: fixed;
-bottom: -85px;
-left: 50%;
-transform: translateX(-50%);
-width: 100%; max-width: 420px;
-height: 165px;
-display: flex;
-justify-content: space-between;
-align-items: center;
-z-index: 150;
+position: fixed; bottom: -85px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 420px; height: 165px;
+display: flex; justify-content: space-between; align-items: center; z-index: 150;
 }
 .nav-btn { width:50%; height: 100%; cursor: pointer; }
 .nav-btn img { width: 100%; height: 100%; object-fit: contain; }
-
-/* Шторки и модальные оверлеи */
 .modal-overlay-bg {
-position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-background-color: rgba(0, 0, 0, 0.5); z-index: 999;
-display: none;
+position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 999; display: none;
 }
 .modal-overlay-bg.open { display: block; }
-
-/* Общая база для обеих шторок (подсчета и выбора игроков) */
 .bottom-sheet, .player-selector-menu {
-position: absolute; bottom: 0; left: 0; right: 0;
-background-size: 100% auto;
-background-position: top center;
-background-repeat: no-repeat;
-background-color: transparent;
-height: 550px;
-transform: translateY(100%);
-transition: transform 0.3s ease-out;
-z-index: 1000;
-display: flex;
-flex-direction: column;
+position: absolute; bottom: 0; left: 0; right: 0; background-size: 100% auto; background-position: top center; background-repeat: no-repeat; background-color: transparent;
+height: 550px; transform: translateY(100%); transition: transform 0.3s ease-out; z-index: 1000; display: flex; flex-direction: column;
 }
 .bottom-sheet.open, .player-selector-menu.open { transform: translateY(0); }
-
-/* Индивидуальные фоны для шторок */
-.sheet-cards-bg {
-background-image: var(--bg-bottom-sheet);
-padding: 75px 25px 0px 25px;
-}
-.player-selector-menu-bg {
-background-image: var(--bg-calc-vibor-player);
-padding: 0;
-}
-
-/* Элементы калькулятора карт */
+.sheet-cards-bg { background-image: var(--bg-bottom-sheet); padding: 75px 25px 0px 25px; }
+.player-selector-menu-bg { background-image: var(--bg-calc-vibor-player); padding: 0; }
 .calc-player-badge {
-position: absolute; background: transparent; border: none;
-font-size: 35px; font-weight: bold; color: var(--bg-calc-player-badge); text-align: center;
-top: 15px; left: 70px; width: 160px; z-index: 1010;
-white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+position: absolute; background: transparent; border: none; font-size: 35px; font-weight: bold; color: var(--bg-calc-player-badge); text-align: center;
+top: 15px; left: 70px; width: 160px; z-index: 1010; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .calc-score-badge {
- position: absolute; 
- background: transparent; 
- border: none;
- font-size: 35px; 
- font-weight: bold; 
- color: var(--bg-calc-player-badge); 
- text-align: center; 
- top: 15px; 
- left: 75%;
- transform: translateX(-50%); 
- width: 120px; 
- z-index: 1010;
+ position: absolute; background: transparent; border: none; font-size: 35px; font-weight: bold; color: var(--bg-calc-player-badge); text-align: center; 
+ top: 15px; left: 75%; transform: translateX(-50%); width: 120px; z-index: 1010;
 }
 .btn-confirm-round {
-position: absolute; cursor: pointer; filter: drop-shadow(0px 3px 5px rgba(0,0,0,0.3));
-z-index: 1020; bottom: 15px; right: 90px; width: 60px; height: 60px;
+position: absolute; cursor: pointer; filter: drop-shadow(0px 3px 5px rgba(0,0,0,0.3)); z-index: 1020; bottom: 15px; right: 90px; width: 60px; height: 60px;
 }
 .btn-flip-side {
-position: absolute; top: 474px; left: 47px; width: 67px; height: 67px;
-cursor: pointer; z-index: 1020; display: none;
+position: absolute; top: 474px; left: 47px; width: 67px; height: 67px; cursor: pointer; z-index: 1020; display: none;
 }
 .cards-scroll-area {
 overflow-y: auto; overflow-x: hidden; flex-grow: 1; margin-bottom: 0px; padding: 0px 5px; scrollbar-width: none; width: 100%;
 }
 .cards-scroll-area::-webkit-scrollbar { display: none; }
-.uno-cards-grid {
-display: grid;
-grid-template-columns: repeat(3, 1fr);
-gap: 10px;
-width: 100%;
-margin: 0 auto;
-padding: 10px 0 80px 0;
-justify-content: center;
-}
-.uno-card-item {
-position: relative;
-aspect-ratio: 2/3;
-background: transparent;
-cursor: pointer;
-width: 100%;
-display: flex;
-justify-content: center;
-align-items: center;
-}
+.uno-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin: 0 auto; padding: 10px 0 80px 0; justify-content: center; }
+.uno-card-item { position: relative; aspect-ratio: 2/3; background: transparent; cursor: pointer; width: 100%; display: flex; justify-content: center; align-items: center; }
 .uno-card-counter {
-position: absolute; top: -5px; right: -3px; background-image: url('kolvo_card.png');
-background-size: 100% 100%;
-background-position: center; background-repeat: no-repeat; color: #09BC00; font-size: 22px; font-weight: bold;
-width: 26px; height: 26px; display: none; justify-content: center; align-items: center;
-z-index: 5;
+position: absolute; top: -5px; right: -3px; background-image: url('kolvo_card.png'); background-size: 100% 100%; background-position: center; background-repeat: no-repeat; color: #09BC00; font-size: 22px; font-weight: bold;
+width: 26px; height: 26px; display: none; justify-content: center; align-items: center; z-index: 5;
 }
 .uno-card-counter.active { display: flex; }
-
-/* Общий класс для зафиксированных шапок (рейтинг и настройки) */
 .sticky-header-image {
-  position: sticky;
-  top: -1px; 
-  z-index: 100;            
-  flex-shrink: 0;
-  align-self: center;      
-  width: 100%;             
-  max-width: 380px; 
-  height: 125px;             
-  margin: 0px auto 5px auto;
-  background-size: contain; 
-  background-repeat: no-repeat;
-  background-position: top center; 
+  position: sticky; top: -1px; z-index: 100; flex-shrink: 0; align-self: center; width: 100%; max-width: 380px; height: 125px; margin: 0px auto 5px auto;
+  background-size: contain; background-repeat: no-repeat; background-position: top center; 
 }
-
-/* Индивидуальные фоны для шапок */
-.rating-title-image {
-  background-image: var(--bg-rating-header);
-}
-.settings-title-image {
-  background-image: var(--bg-settings-header);
-}
-
-.rating-scroll-container { 
-  width: 100%; 
-  display: flex; 
-  flex-direction: column; 
-  gap: 0px;
-  padding: 0px 0px 20px 0px; 
-  margin-top: 0px; 
-}
- .rating-player-row {
- height: 160px; width: 100%;
- position: relative; font-weight: bold;
- overflow: hidden;
- }
- /* СЛОЙ 2: Рамка в рейтинге поверх фото */
- .rating-row-frame {
- position: absolute;
- top: 0; left: 0; width: 100%; height: 100%;
- background-size: contain; background-repeat: no-repeat; background-position: center;
- z-index: 2;
- pointer-events: none;
- }
- /* СЛОЙ 1: Подложка под вырез в плашке рейтинга */
- .rating-row-photo {
- position: absolute;
- top: 25px; 
- left: 32px; 
- width: 100px; 
- height: 100px; 
- z-index: 1;
- object-fit: cover;
- border-radius: 15px;
- background-color: #2c2c2c;
- }
- /* СЛОЙ 3: Текст рейтинга */
- .rating-player-name {
- position: absolute; top: 29px; left: 175px; font-size: 23px;
- text-transform: uppercase; color: var(--bg-calc-player-badge-2);
- z-index: 3;
- }
- .rating-player-rank {
- position: absolute; bottom: 39px; left: 186px; font-size: 25px; color: white;
- z-index: 3;
- }
- .rating-player-score {
- position: absolute; bottom: 39px; right: 80px; font-size: 25px;
- color: var(--bg-calc-player-badge-2);
- z-index: 3;
- }
+.rating-title-image { background-image: var(--bg-rating-header); }
+.settings-title-image { background-image: var(--bg-settings-header); }
+.rating-scroll-container { width: 100%; display: flex; flex-direction: column; gap: 0px; padding: 0px 0px 20px 0px; margin-top: 0px; }
+ .rating-player-row { height: 160px; width: 100%; position: relative; font-weight: bold; overflow: hidden; }
+ .rating-row-frame { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: contain; background-repeat: no-repeat; background-position: center; z-index: 2; pointer-events: none; }
+ .rating-row-photo { position: absolute; top: 25px; left: 32px; width: 100px; height: 100px; z-index: 1; object-fit: cover; border-radius: 0%; background-color: #2c2c2c; }
+ .rating-player-name { position: absolute; top: 29px; left: 175px; font-size: 23px; text-transform: uppercase; color: var(--bg-calc-player-badge-2); z-index: 3; }
+ .rating-player-rank { position: absolute; bottom: 39px; left: 186px; font-size: 25px; color: white; z-index: 3; }
+ .rating-player-score { position: absolute; bottom: 39px; right: 80px; font-size: 25px; color: var(--bg-calc-player-badge-2); z-index: 3; }
  .rank-1 { background-image: url('frame_player_gold.png'); }
  .rank-2 { background-image: url('frame_player_silver.png'); }
  .rank-3 { background-image: url('frame_player_copper.png'); }
  .rank-other { background-image: url('frame_player.png'); }
-
  .uno-card-item img { width: 100%; height: 100%; object-fit: contain; }
-
-/* Карточка с плюсом */
 .add-player-card {
-background-image: var(--bg-image-add-player);
-background-size: contain; background-repeat: no-repeat; background-position: center;
-aspect-ratio: 104/191; width: 104px; cursor: pointer;
-filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.25));
-margin: 0 auto;
+background-image: var(--bg-image-add-player); background-size: contain; background-repeat: no-repeat; background-position: center;
+aspect-ratio: 104/191; width: 104px; cursor: pointer; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.25)); margin: 0 auto;
 }
-
-/* Контент внутри шторки выбора игроков */
-.player-selector-content { 
-width: 100%; height: 100%; padding: 27px 0px; box-sizing: border-box; display: flex; flex-direction: column; 
-}
+.player-selector-content { width: 100%; height: 100%; padding: 27px 0px; box-sizing: border-box; display: flex; flex-direction: column; }
 .player-selector-header { color: #fff; font-size: 22px; font-weight: bold; text-align: center; margin-bottom: 0px; text-shadow: 1px 1px 3px black; }
-.player-selector-list {
- flex: 1;
- overflow-y: auto;
- display: flex;
- flex-direction: column; 
- align-items: center; 
- justify-content: flex-start; 
- gap: 12px; 
- padding: 20px 0px 40px;
- margin-bottom: -50px;
- scrollbar-width: none;
- }
- .player-selector-list::-webkit-scrollbar { display: none; }
-/* Вытянутая строка игрока */
+.player-selector-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 12px; padding: 20px 0px 40px; margin-bottom: -50px; scrollbar-width: none; }
+.player-selector-list::-webkit-scrollbar { display: none; }
 .player-selector-row {
- width: 308px; min-width: 308px; max-width: 308px;
- height: 115px; min-height: 115px; max-height: 115px;
- display: flex; justify-content: center; align-items: center;
- padding: 0 5px; box-sizing: border-box;
- cursor: pointer; transition: filter 0.2s ease, transform 0.1s ease;
- filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.25));
- position: relative;
- margin: 0;
- z-index: 1;
+ width: 308px; min-width: 308px; max-width: 308px; height: 115px; min-height: 115px; max-height: 115px; display: flex; justify-content: center; align-items: center;
+ padding: 0 5px; box-sizing: border-box; cursor: pointer; transition: filter 0.2s ease, transform 0.1s ease; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.25)); position: relative; margin: 0; z-index: 1;
 }
 .player-selector-row .player-photo-mini {
- position: absolute;
- top: 15px;
- left: 28px;
- width: 68px;
- height: 85px;
- background-color: #2c2c2c;
- background-size: cover;
- background-position: center;
- background-repeat: no-repeat;
- border-radius: 4px;
- z-index: 1;
+ position: absolute; top: 15px; left: 28px; width: 68px; height: 85px; background-color: #2c2c2c; background-size: cover; background-position: center; background-repeat: no-repeat; border-radius: 4px; z-index: 1;
 }
 .player-selector-row::after {
- content: "";
- position: absolute;
- top: 0; left: 0; width: 100%; height: 100%;
- background-image: var(--bg-player-row-bg);
- background-size: 100% 100%;
- background-repeat: no-repeat;
- z-index: 2;
- pointer-events: none;
+ content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: var(--bg-player-row-bg); background-size: 100% 100%; background-repeat: no-repeat; z-index: 2; pointer-events: none;
 }
-.player-selector-row.active::after {
- background-image: var(--bg-player-row-active-bg);
-}
-.player-row-name {
- color: var(--bg-calc-player-badge);
- font-size: 18px;
- font-weight: bold;
- position: absolute;
- top: 19px;
- left: 210px;
- transform: translateX(-50%);
- z-index: 3;
-}
-.player-selector-ok-btn {
-position: absolute; bottom: 20px; left: 315px; top: 475px; width: 65px; height: 65px; background-image: var(--bg-button-ok); background-size: contain; background-repeat: no-repeat; cursor: pointer; z-index: 10;
-}
+.player-selector-row.active::after { background-image: var(--bg-player-row-active-bg); }
+.player-row-name { color: var(--bg-calc-player-badge); font-size: 18px; font-weight: bold; position: absolute; top: 19px; left: 210px; transform: translateX(-50%); z-index: 3; }
+.player-selector-ok-btn { position: absolute; bottom: 20px; left: 315px; top: 475px; width: 65px; height: 65px; background-image: var(--bg-button-ok); background-size: contain; background-repeat: no-repeat; cursor: pointer; z-index: 10; }
 .btn-confirm-round {
- position: absolute; 
- cursor: pointer; 
- filter: drop-shadow(0px 3px 5px rgba(0,0,0,0.3));
- z-index: 1020; 
- bottom: 15px; 
- right: 50px; 
- width: 60px; height: 60px; 
- background-image: var(--bg-btn-confirm);
- background-size: contain;
- background-repeat: no-repeat;
- background-position: center;
+ position: absolute; cursor: pointer; filter: drop-shadow(0px 3px 5px rgba(0,0,0,0.3)); z-index: 1020; bottom: 15px; right: 50px; width: 60px; height: 60px; 
+ background-image: var(--bg-btn-confirm); background-size: contain; background-repeat: no-repeat; background-position: center;
 }
-
-/* СТИЛИ ДЛЯ РАСШИРЕННЫХ НАСТРОЕК */
 .settings-player-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 380px;
-  background: rgba(255, 255, 255, 0.12);
-  padding: 12px 15px;
-  margin: 0 auto 10px auto;
-  border-radius: 12px;
-  color: white;
-  border: 1px solid rgba(255,255,255,0.05);
+  display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 380px; background: rgba(255, 255, 255, 0.12);
+  padding: 12px 15px; margin: 0 auto 10px auto; border-radius: 12px; color: white; border: 1px solid rgba(255,255,255,0.05);
 }
-.settings-photo-preview {
-  width: 50px; height: 50px;
-  border-radius: 8px;
-  object-fit: cover;
-  background-color: #444;
-  border: 2px solid #fff;
-  cursor: pointer;
-}
-.settings-player-name-input {
-  background: rgba(0,0,0,0.4);
-  border: 1px solid rgba(255,255,255,0.2);
-  color: white;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 16px;
-  font-weight: bold;
-  width: 130px;
-  text-transform: uppercase;
-}
-.settings-player-name-input:focus {
-  outline: none;
-  border-color: var(--bg-calc-player-badge);
-}
-.btn-upload-photo {
-  background: var(--bg-calc-player-badge);
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  font-size: 13px;
-}
-.btn-delete-player {
-  background: #E50000;
-  color: white;
-  border: none;
-  padding: 8px 10px;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  font-size: 13px;
-}
+.settings-photo-preview { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; background-color: #444; border: 2px solid #fff; cursor: pointer; }
+.settings-player-name-input { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 6px 10px; border-radius: 6px; font-size: 16px; font-weight: bold; width: 130px; text-transform: uppercase; }
+.settings-player-name-input:focus { outline: none; border-color: var(--bg-calc-player-badge); }
+.btn-upload-photo { background: var(--bg-calc-player-badge); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
+.btn-delete-player { background: #E50000; color: white; border: none; padding: 8px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
 .btn-add-new-player-trigger {
-  display: block;
-  width: 100%;
-  max-width: 380px;
-  margin: 20px auto;
-  background: #24a122;
-  color: white;
-  border: none;
-  padding: 14px;
-  font-size: 16px;
-  font-weight: bold;
-  border-radius: 10px;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  display: block; width: 100%; max-width: 380px; margin: 20px auto; background: #24a122; color: white; border: none; padding: 14px;
+  font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
-
-/* Кнопка сброса рейтинга */
 .btn-reset-leaderboard {
-  display: block;
-  width: 100%;
-  max-width: 380px;
-  margin: 10px auto 10px auto;
-  background: #E50000;
-  color: white;
-  border: none;
-  padding: 12px;
-  font-size: 15px;
-  font-weight: bold;
-  border-radius: 15px;
-  cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.25);
-  text-transform: uppercase;
-  transition: background-color 0.2s;
+  display: block; width: 100%; max-width: 380px; margin: 10px auto 10px auto; background: #E50000; color: white; border: none; padding: 12px;
+  font-size: 15px; font-weight: bold; border-radius: 15px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.25); text-transform: uppercase; transition: background-color 0.2s;
 }
-.btn-reset-leaderboard:active {
-  background: #b30000;
-}
-
-/* Экран триумфа */
+.btn-reset-leaderboard:active { background: #b30000; }
 .winner-fullscreen-overlay {
-  position: fixed;
-  top: 0; left: 0; width: 100vw; height: 100vh;
-  background: rgba(0, 0, 0, 0.85);
-  z-index: 5000;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.85); z-index: 5000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;
 }
-.winner-banner-img {
-  position: absolute;
-  z-index: 2;
-  top: 120px;
-  width: 90%;
-  max-width: 380px;
-  height: auto;
-  object-fit: contain;
-  margin-bottom: 0px;
-}
+.winner-banner-img { position: absolute; z-index: 2; top: 120px; width: 90%; max-width: 380px; height: auto; object-fit: contain; margin-bottom: 0px; }
 .winner-photo {
-  position: absolute;
-  z-index: 1;
-  top: 130px;
-  width: 370px;
-  height: 465px;
-  object-fit: cover;
-  border-radius: 35px;
-  margin-bottom: 10px;
-  box-shadow: 0px 6px 15px rgba(0,0,0,0.6);
-  background-color: #2c2c2c;
-
+  position: absolute; z-index: 1; top: 130px; width: 370px; height: 465px; object-fit: cover; border-radius: 35px; margin-bottom: 10px; box-shadow: 0px 6px 15px rgba(0,0,0,0.6); background-color: #2c2c2c;
 }
-.winner-banner-img { width: 100%; display: block; }
-.winner-name-text {
-  position: absolute;
-  top: 150px;
-  z-index: 2;
-  color: #fff;
-  font-size: 26px;
-  font-weight: bold;
-  margin-top: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
+.winner-name-text { position: absolute; top: 150px; z-index: 2; color: #fff; font-size: 26px; font-weight: bold; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
 </style>
 </head>
 <body>
@@ -656,19 +299,32 @@ position: absolute; bottom: 20px; left: 315px; top: 475px; width: 65px; height: 
 
 <input type="file" id="hidden-photo-input" accept="image/*" style="display:none;">
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCUoCkHbnFMOyUzBvHb11HvP-6UT7sDPd4",
+  authDomain: "uno-95193.firebaseapp.com",
+  projectId: "uno-95193",
+  storageBucket: "uno-95193.firebasestorage.app",
+  messagingSenderId: "195546427449",
+  appId: "1:195546427449:web:210e14233f49c178ea1de8",
+  measurementId: "G-N3R1NGXT75"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Используем один документ в коллекции для полной синхронизации структуры (как было в localStorage)
+const gameStateRef = doc(db, "uno_app", "game_state");
+
 var curPlayerId = null;
 var currentRoundCounts = {};
 var selectedVersion = "UNO";
 var isDeckExpanded = false;
 var isDarkSideActive = false;
 var photoTargetPlayerId = null;
-
-function savePlayersToLocalStorage() {
-  var safeString = encodeURIComponent(JSON.stringify(players));
-  localStorage.setItem('uno_app_players_data', safeString);
-}
 
 var defaultPlayers = [
 { id: 1, name: "ЯНА", score: 0, globalScore: 0, photo: "photo_5305306486818938491_y.jpg" },
@@ -682,20 +338,32 @@ var defaultPlayers = [
 { id: 9, name: "ДАНИЛ", score: 0, globalScore: 0, photo: "photo_5308003928144287430_x.jpg" }
 ];
 
-var cachedData = localStorage.getItem('uno_app_players_data');
-var players = defaultPlayers;
-
-if (cachedData) {
-  try {
-    players = JSON.parse(decodeURIComponent(cachedData));
-  } catch (e) {
-    console.error("Ошибка чтения кэша, сброс до дефолтных настроек", e);
-    players = defaultPlayers;
-  }
-}
-
+var players = [];
 var activePlayerIds = [];
 var tempSelectedPlayerIds = [];
+
+// Функция сохранения теперь отправляет данные в Firestore
+function savePlayersToDB() {
+  setDoc(gameStateRef, { players: players }, { merge: true })
+    .catch(error => console.error("Ошибка сохранения в Firebase:", error));
+}
+
+// Слушатель реального времени для обновления со всех устройств
+onSnapshot(gameStateRef, (docSnap) => {
+  if (docSnap.exists()) {
+    players = docSnap.data().players || [];
+  } else {
+    // Если база пустая, загружаем стандартных игроков
+    players = defaultPlayers;
+    savePlayersToDB();
+  }
+  
+  // Автоматическая перерисовка интерфейса при приходе новых данных из облака
+  renderMainGrid();
+  if (document.getElementById('page-rating').classList.contains('active')) updateLeaderboard();
+  if (document.getElementById('page-settings').classList.contains('active')) renderSettingsPlayers();
+});
+
 var themeAssets = {
 "UNO": { btnGame: "button_start.png", btnRating: "button_leaderboard.png", btnSettings: "button_settings.png", btnOk: "button_ok.png" },
 "UNO Flip": { btnGame: "button_start_f.png", btnRating: "button_leaderboard_f.png", btnSettings: "button_settings_f.png", btnOk: "button_ok_f.png" },
@@ -742,9 +410,7 @@ var cardsData = {
 };
 
 function getActiveDeckKey() {
-if (selectedVersion === "UNO Flip" && isDarkSideActive) {
-return "UNO Flip dark";
-}
+if (selectedVersion === "UNO Flip" && isDarkSideActive) { return "UNO Flip dark"; }
 return selectedVersion;
 }
 
@@ -762,9 +428,7 @@ playerCard.innerHTML = `
 <div class="player-name-badge">${player.name}</div>
 <div class="player-score">${player.score}</div>
 `;
-playerCard.addEventListener('click', function() {
-openCardCalc(player.id);
-});
+playerCard.addEventListener('click', function() { openCardCalc(player.id); });
 grid.appendChild(playerCard);
 }
 });
@@ -784,14 +448,10 @@ listContainer.innerHTML = '';
 players.forEach(function(player) {
 var row = document.createElement('div');
 row.className = 'player-selector-row';
-if (tempSelectedPlayerIds.includes(player.id)) {
-row.classList.add('active');
-}
+if (tempSelectedPlayerIds.includes(player.id)) { row.classList.add('active'); }
 var photoDiv = document.createElement('div');
 photoDiv.className = 'player-photo-mini';
-if (player.photo) {
- photoDiv.style.backgroundImage = "url('" + player.photo + "')";
-}
+if (player.photo) { photoDiv.style.backgroundImage = "url('" + player.photo + "')"; }
 row.appendChild(photoDiv);
 var nameLabel = document.createElement('div');
 nameLabel.className = 'player-row-name';
@@ -894,23 +554,15 @@ count + '</div>' +
 document.getElementById('cards-grid-target').innerHTML = html;
 var cardItems = document.querySelectorAll('.uno-card-item');
 cardItems.forEach(function(item) {
-item.addEventListener('click', function() {
-var cardId = this.getAttribute('data-card-id');
-clickCard(cardId);
-});
+item.addEventListener('click', function() { clickCard(this.getAttribute('data-card-id')); });
 });
 }
 
 function clickCard(cardId) {
-if (!currentRoundCounts[cardId]) {
-currentRoundCounts[cardId] = 0;
-}
+if (!currentRoundCounts[cardId]) { currentRoundCounts[cardId] = 0; }
 currentRoundCounts[cardId]++;
 var badge = document.getElementById('badge-' + cardId);
-if(badge) {
-badge.innerText = currentRoundCounts[cardId];
-badge.classList.add('active');
-}
+if(badge) { badge.innerText = currentRoundCounts[cardId]; badge.classList.add('active'); }
 updateLiveTotal();
 }
 
@@ -940,14 +592,9 @@ function openCardCalc(id) {
 curPlayerId = id;
 var player = null;
 for (var i = 0; i < players.length; i++) {
-if (players[i].id === id) {
-player = players[i];
-break;
+if (players[i].id === id) { player = players[i]; break; }
 }
-}
-if(player) {
-document.getElementById('modal-player-title').innerText = player.name;
-}
+if(player) { document.getElementById('modal-player-title').innerText = player.name; }
 currentRoundCounts = {};
 document.getElementById('modal-live-score').innerText = "+0";
 updateFlipButtonVisibility();
@@ -990,10 +637,7 @@ roundTotal += count * card.points;
 }
 if (curPlayerId !== null) {
 for (var j = 0; j < players.length; j++) {
-if (players[j].id === curPlayerId) {
-players[j].score += roundTotal;
-break;
-}
+if (players[j].id === curPlayerId) { players[j].score += roundTotal; break; }
 }
 var targetLimit = (selectedVersion === "UNO Dos") ? 200 : 500;
 var partyOver = false;
@@ -1006,26 +650,21 @@ break;
 }
 if (partyOver) {
 var winnerPlayer = null;
-var maxScore = -1; // Исправлено: теперь ищем максимальный счет
+var maxScore = -1; 
 
-// 1. Ищем МАКСИМАЛЬНЫЙ счет (тот, кто пробил лимит)
 players.forEach(function(p) {
   if (activePlayerIds.includes(p.id)) {
-    if (p.score > maxScore) {
-      maxScore = p.score;
-    }
+    if (p.score > maxScore) { maxScore = p.score; }
   }
 });
 
-// 2. Находим конкретного победителя, набравшего этот счет
 for (var x = 0; x < players.length; x++) {
   if (activePlayerIds.includes(players[x].id) && players[x].score === maxScore) {
     winnerPlayer = players[x];
-    break; // Нашли нужного игрока по ID
+    break; 
   }
 }
 
-// Замораживаем данные победителя для экрана
 var frozenWinner = {
   name: winnerPlayer ? winnerPlayer.name : "ПОБЕДИТЕЛЬ",
   photo: winnerPlayer ? winnerPlayer.photo : ""
@@ -1040,8 +679,7 @@ showWinnerOverlay(frozenWinner);
 }
 curPlayerId = null;
 }
-savePlayersToLocalStorage();
-renderMainGrid();
+savePlayersToDB();
 closeSheet();
 }
 
@@ -1081,13 +719,8 @@ document.getElementById('rating-list-target').innerHTML = html;
 
 document.getElementById('btn-reset-scores').addEventListener('click', function() {
   if (confirm("Вы уверены, что хотите полностью сбросить глобальный рейтинг всех игроков? Это действие необратимо.")) {
-    players.forEach(function(p) {
-      p.globalScore = 0;
-      p.score = 0;
-    });
-    savePlayersToLocalStorage();
-    updateLeaderboard();
-    renderMainGrid();
+    players.forEach(function(p) { p.globalScore = 0; p.score = 0; });
+    savePlayersToDB();
   }
 });
 }
@@ -1119,12 +752,9 @@ function renderSettingsPlayers() {
       var newName = this.value.trim().toUpperCase();
       if (newName.length > 0) {
         for (var i = 0; i < players.length; i++) {
-          if (players[i].id === pId) {
-            players[i].name = newName;
-            break;
-          }
+          if (players[i].id === pId) { players[i].name = newName; break; }
         }
-        savePlayersToLocalStorage();
+        savePlayersToDB();
       }
     });
   });
@@ -1151,9 +781,7 @@ function renderSettingsPlayers() {
       if (confirm("Вы уверены, что хотите полностью удалить игрока " + pName + "?")) {
         players = players.filter(function(p) { return p.id !== pId; });
         activePlayerIds = activePlayerIds.filter(function(id) { return id !== pId; });
-        savePlayersToLocalStorage();
-        renderSettingsPlayers();
-        renderMainGrid();
+        savePlayersToDB();
       }
     });
   });
@@ -1171,9 +799,7 @@ document.getElementById('btn-create-player').addEventListener('click', function(
   var newId = maxId + 1;
   
   players.push({ id: newId, name: finalName, score: 0, globalScore: 0, photo: "" });
-  savePlayersToLocalStorage();
-  renderSettingsPlayers();
-  renderMainGrid();
+  savePlayersToDB();
 });
 
 document.getElementById('hidden-photo-input').addEventListener('change', function(e) {
@@ -1188,9 +814,7 @@ document.getElementById('hidden-photo-input').addEventListener('change', functio
         break;
       }
     }
-    savePlayersToLocalStorage();
-    renderSettingsPlayers();
-    renderMainGrid();
+    savePlayersToDB();
   };
   reader.readAsDataURL(file);
 });
@@ -1254,9 +878,6 @@ if (isDeckExpanded && deckContainer && !deckContainer.contains(event.target)) {
 deckContainer.classList.remove('expanded');
 isDeckExpanded = false;
 }
-});
-
-renderMainGrid();
 });
 </script>
 </body>
