@@ -67,15 +67,28 @@ display: flex; flex-direction: column; justify-content: flex-start;
 position: relative; overflow: hidden; background: rgba(0,0,0,0.1);
 }
 
-/* ГЛАВНАЯ ПЛАШКА ВЫБОРА ИГРЫ */
+/* НОВАЯ ОБЕРТКА ДЛЯ ЛИПКОЙ ШАПКИ (решает проблему с багами на Android) */
+.sticky-deck-wrapper {
+position: sticky;
+top: 0;
+left: 0;
+width: 100%;
+z-index: 300;
+padding-top: 10px; /* Небольшой отступ от самого верха экрана */
+display: flex;
+justify-content: center;
+}
+
+/* ГЛАВНАЯ ПЛАШКА ВЫБОРА ИГРЫ (Оригинальные стили) */
 .game-version-deck {
-width: calc(100% - 30px);
+width: calc(110% - 60px);
 max-width: 380px;
 height: 1030px;
-margin: -930px auto 15px auto;
+margin: -910px auto 15px auto;
 position: relative;
 z-index: 300;
 transition: opacity 0.2s ease;
+flex-shrink: 0;
 }
 .version-card {
 position: absolute;
@@ -98,11 +111,14 @@ z-index: 10;
 /* ОБЕРТКА ДЛЯ СЛАЙДЕРА СТРАНИЦ */
 .pages-wrapper {
 display: flex;
+flex-direction: row;
+flex-wrap: nowrap;
 width: 300%;
 height: 100%;
 transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
 will-change: transform;
 flex: 1;
+touch-action: pan-y; /* Запрещает браузеру делать свои жесты вбок (например "назад") */
 }
 
 /* КОНТЕЙНЕРЫ СТРАНИЦ */
@@ -111,17 +127,20 @@ display: flex;
 flex-direction: column;
 align-items: center;
 padding: 0 15px 90px 15px;
+flex: 0 0 33.3333%;
 width: 33.3333%;
 height: 100%;
 overflow-y: auto;
+overflow-x: hidden;
 scrollbar-width: none;
 box-sizing: border-box;
+position: relative;
 }
 .page::-webkit-scrollbar { display: none; }
 
 .players-grid {
 display: grid; grid-template-columns: repeat(3, 104px); justify-content: center; gap: 18px;
-width: 100%; max-width: 380px; margin: 20px auto 0 auto; padding: 0 10px; position: relative; z-index: 50;
+width: 100%; max-width: 380px; margin: 0px auto 0 auto; padding: 0 10px; position: relative; z-index: 50;
 }
 .player-card {
 width: 104px; height: 191px; box-sizing: border-box; margin: 0 auto; position: relative;
@@ -259,16 +278,20 @@ aspect-ratio: 104/191; width: 104px; cursor: pointer; filter: drop-shadow(0px 4p
 </head>
 <body>
 <div class="app-container">
-<div id="version-deck-container" class="game-version-deck">
-<div id="card-uno" class="version-card active-deck" data-version="UNO"><img src="text_current_version.png" alt="UNO"></div>
-<div id="card-flip" class="version-card" data-version="UNO Flip"><img src="flip.png" alt="UNO Flip"></div>
-<div id="card-dos" class="version-card" data-version="UNO Dos"><img src="dos.png" alt="UNO Dos"></div>
-</div>
 
 <div id="pages-wrapper" class="pages-wrapper">
-    <div id="page-game" class="page active" style="padding-top: 120px;">
+    <div id="page-game" class="page active" style="padding-top: 0px;">
+        
+        <div class="sticky-deck-wrapper">
+            <div id="version-deck-container" class="game-version-deck">
+                <div id="card-uno" class="version-card active-deck" data-version="UNO"><img src="text_current_version.png" alt="UNO"></div>
+                <div id="card-flip" class="version-card" data-version="UNO Flip"><img src="flip.png" alt="UNO Flip"></div>
+                <div id="card-dos" class="version-card" data-version="UNO Dos"><img src="dos.png" alt="UNO Dos"></div>
+            </div>
+        </div>
         <div class="players-grid" id="main-players-grid"></div>
     </div>
+    
     <div id="page-rating" class="page" style="padding-top: 0px;">
         <div class="sticky-header-image rating-title-image"></div>
         <div id="rating-list-target" class="rating-scroll-container"></div>
@@ -338,14 +361,13 @@ var isDeckExpanded = false;
 var isDarkSideActive = false;
 var photoTargetPlayerId = null;
 
-// ПЕРЕМЕННЫЕ ДЛЯ СЛАЙДЕРА
 const pagesList = ['page-game', 'page-rating', 'page-settings'];
 let currentPageIndex = 0;
 let touchStartX = 0;
 let touchStartY = 0;
 let touchEndX = 0;
 let touchEndY = 0;
-const SWIPE_THRESHOLD = 45; // Порог в пикселях для исключения ложных срабатываний
+const SWIPE_THRESHOLD = 45; 
 
 var defaultPlayers = [
 { id: 1, name: "ЯНА", score: 0, globalScore: 0, photo: "photo_5305306486818938491_y.jpg" },
@@ -381,10 +403,11 @@ onSnapshot(gameStateRef, (docSnap) => {
   if (document.getElementById('page-settings').classList.contains('active')) renderSettingsPlayers();
 });
 
+// ДОБАВЛЕНЫ КАРТИНКИ ДЛЯ АКТИВНОГО СОСТОЯНИЯ (btnGameSel, btnRatingSel, btnSettingsSel)
 var themeAssets = {
-"UNO": { btnGame: "button_start.png", btnRating: "button_leaderboard.png", btnSettings: "button_settings.png", btnOk: "button_ok.png" },
-"UNO Flip": { btnGame: "button_start_f.png", btnRating: "button_leaderboard_f.png", btnSettings: "button_settings_f.png", btnOk: "button_ok_f.png" },
-"UNO Dos": { btnGame: "button_start_d.png", btnRating: "button_leaderboard_d.png", btnSettings: "button_settings_d.png", btnOk: "button_ok_d.png" }
+"UNO": { btnGame: "button_start.png", btnRating: "button_leaderboard.png", btnSettings: "button_settings.png", btnGameSel: "button_start_select.png", btnRatingSel: "button_leaderboard_select.png", btnSettingsSel: "button_settings_select.png" },
+"UNO Flip": { btnGame: "button_start_f.png", btnRating: "button_leaderboard_f.png", btnSettings: "button_settings_f.png", btnGameSel: "button_start_select_f.png", btnRatingSel: "button_leaderboard_select_f.png", btnSettingsSel: "button_settings_select_f.png" },
+"UNO Dos": { btnGame: "button_start_d.png", btnRating: "button_leaderboard_d.png", btnSettings: "button_settings_d.png", btnGameSel: "button_start_select.png", btnRatingSel: "button_leaderboard_select.png", btnSettingsSel: "button_settings_select.png" }
 };
 var cardsData = {
 "UNO": [
@@ -425,6 +448,31 @@ var cardsData = {
 { id: "c55", points: 40, img: "11d.png" }
 ]
 };
+
+// НОВАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ НАВИГАЦИИ С УЧЕТОМ АКТИВНОЙ ВКЛАДКИ
+function updateNavImages() {
+  var assets = themeAssets[selectedVersion];
+  var imgGame = document.getElementById('img-nav-game');
+  var imgRating = document.getElementById('img-nav-rating');
+  var imgSettings = document.getElementById('img-nav-settings');
+  
+  if (!assets || !imgGame || !imgRating || !imgSettings) return;
+
+  // Сбрасываем все до обычных картинок
+  imgGame.src = assets.btnGame;
+  imgRating.src = assets.btnRating;
+  imgSettings.src = assets.btnSettings;
+
+  // Устанавливаем "выделенную" картинку для активной вкладки
+  var activePageId = pagesList[currentPageIndex];
+  if (activePageId === 'page-game') {
+      imgGame.src = assets.btnGameSel;
+  } else if (activePageId === 'page-rating') {
+      imgRating.src = assets.btnRatingSel;
+  } else if (activePageId === 'page-settings') {
+      imgSettings.src = assets.btnSettingsSel;
+  }
+}
 
 function getActiveDeckKey() {
 if (selectedVersion === "UNO Flip" && isDarkSideActive) { return "UNO Flip dark"; }
@@ -522,15 +570,8 @@ if (clickedVersion && clickedVersion !== selectedVersion) {
 selectedVersion = clickedVersion;
 isDarkSideActive = false;
 document.body.setAttribute('data-theme', selectedVersion);
-var assets = themeAssets[selectedVersion];
-if (assets) {
-var imgGame = document.getElementById('img-nav-game');
-var imgRating = document.getElementById('img-nav-rating');
-var imgSettings = document.getElementById('img-nav-settings');
-if (imgGame) imgGame.src = assets.btnGame;
-if (imgRating) imgRating.src = assets.btnRating;
-if (imgSettings) imgSettings.src = assets.btnSettings;
-}
+// ВМЕСТО РУЧНОЙ ЗАМЕНЫ ВЫЗЫВАЕМ ФУНКЦИЮ
+updateNavImages();
 }
 var cards = deckContainer.getElementsByClassName('version-card');
 for (var i = 0; i < cards.length; i++) {
@@ -842,26 +883,19 @@ const newIndex = pagesList.indexOf(pageId);
 if (newIndex === -1) return;
 currentPageIndex = newIndex;
 
-// Логическое переключение классов active для триггеров обновления контента
 pagesList.forEach(id => document.getElementById(id).classList.remove('active'));
 document.getElementById(pageId).classList.add('active');
 
-// Анимация слайда
+// Выполняем саму анимацию слайда
 document.getElementById('pages-wrapper').style.transform = `translateX(-${currentPageIndex * 33.3333}%)`;
+
+// ВЫЗОВ ОБНОВЛЕНИЯ НАВИГАЦИОННЫХ КАРТИНОК
+updateNavImages();
 
 var deckContainer = document.getElementById('version-deck-container');
 if (deckContainer) {
-if(pageId === 'page-game') {
-deckContainer.style.visibility = 'visible';
-deckContainer.style.opacity = '1';
-deckContainer.style.pointerEvents = 'auto';
-} else {
-deckContainer.style.visibility = 'hidden';
-deckContainer.style.opacity = '0';
-deckContainer.style.pointerEvents = 'none';
-}
-deckContainer.classList.remove('expanded');
-isDeckExpanded = false;
+  deckContainer.classList.remove('expanded');
+  isDeckExpanded = false;
 }
 if(pageId === 'page-rating') { updateLeaderboard(); }
 if(pageId === 'page-settings') { renderSettingsPlayers(); }
@@ -884,7 +918,6 @@ pagesWrapper.addEventListener('touchend', function(e) {
 }, {passive: true});
 
 function handleSwipe() {
-  // Блокируем свайп, если открыты модальные окна поверх интерфейса
   if (document.getElementById('modal-overlay').classList.contains('open') ||
       document.getElementById('player-modal-overlay').classList.contains('open')) {
       return;
@@ -893,16 +926,12 @@ function handleSwipe() {
   const diffX = touchStartX - touchEndX;
   const diffY = touchStartY - touchEndY;
 
-  // Проверка: горизонтальный свайп должен быть больше вертикального (защита от ложных срабатываний при скролле)
-  // и превышать установленный порог (SWIPE_THRESHOLD)
   if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > SWIPE_THRESHOLD) {
       if (diffX > 0) {
-          // Свайп влево -> следующая страница
           if (currentPageIndex < pagesList.length - 1) {
               switchPage(pagesList[currentPageIndex + 1]);
           }
       } else {
-          // Свайп вправо -> предыдущая страница
           if (currentPageIndex > 0) {
               switchPage(pagesList[currentPageIndex - 1]);
           }
@@ -947,6 +976,9 @@ deckContainer.classList.remove('expanded');
 isDeckExpanded = false;
 }
 });
+
+// ИНИЦИАЛИЗАЦИЯ ИКОНОК ПРИ ПЕРВОЙ ЗАГРУЗКЕ
+updateNavImages();
 </script>
 </body>
 </html>
