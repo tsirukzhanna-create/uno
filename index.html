@@ -403,7 +403,6 @@ onSnapshot(gameStateRef, (docSnap) => {
   if (document.getElementById('page-settings').classList.contains('active')) renderSettingsPlayers();
 });
 
-// ДОБАВЛЕНЫ КАРТИНКИ ДЛЯ АКТИВНОГО СОСТОЯНИЯ (btnGameSel, btnRatingSel, btnSettingsSel)
 var themeAssets = {
 "UNO": { btnGame: "button_start.png", btnRating: "button_leaderboard.png", btnSettings: "button_settings.png", btnGameSel: "button_start_select.png", btnRatingSel: "button_leaderboard_select.png", btnSettingsSel: "button_settings_select.png" },
 "UNO Flip": { btnGame: "button_start_f.png", btnRating: "button_leaderboard_f.png", btnSettings: "button_settings_f.png", btnGameSel: "button_start_select_f.png", btnRatingSel: "button_leaderboard_select_f.png", btnSettingsSel: "button_settings_select_f.png" },
@@ -449,7 +448,6 @@ var cardsData = {
 ]
 };
 
-// НОВАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ НАВИГАЦИИ С УЧЕТОМ АКТИВНОЙ ВКЛАДКИ
 function updateNavImages() {
   var assets = themeAssets[selectedVersion];
   var imgGame = document.getElementById('img-nav-game');
@@ -458,12 +456,10 @@ function updateNavImages() {
   
   if (!assets || !imgGame || !imgRating || !imgSettings) return;
 
-  // Сбрасываем все до обычных картинок
   imgGame.src = assets.btnGame;
   imgRating.src = assets.btnRating;
   imgSettings.src = assets.btnSettings;
 
-  // Устанавливаем "выделенную" картинку для активной вкладки
   var activePageId = pagesList[currentPageIndex];
   if (activePageId === 'page-game') {
       imgGame.src = assets.btnGameSel;
@@ -553,6 +549,15 @@ function closePlayerSelectorMenu() {
 
 document.getElementById('player-selector-ok-btn').addEventListener('click', function() {
 activePlayerIds = [...tempSelectedPlayerIds];
+
+// ИСПРАВЛЕНИЕ 1: Обнуляем очки тем, кого убрали с игрового поля
+players.forEach(function(player) {
+  if (!activePlayerIds.includes(player.id)) {
+    player.score = 0;
+  }
+});
+savePlayersToDB(); // Сохраняем обнуленные очки
+
 closePlayerSelectorMenu();
 renderMainGrid();
 });
@@ -570,7 +575,6 @@ if (clickedVersion && clickedVersion !== selectedVersion) {
 selectedVersion = clickedVersion;
 isDarkSideActive = false;
 document.body.setAttribute('data-theme', selectedVersion);
-// ВМЕСТО РУЧНОЙ ЗАМЕНЫ ВЫЗЫВАЕМ ФУНКЦИЮ
 updateNavImages();
 }
 var cards = deckContainer.getElementsByClassName('version-card');
@@ -860,24 +864,54 @@ document.getElementById('btn-create-player').addEventListener('click', function(
   savePlayersToDB();
 });
 
+// ИСПРАВЛЕНИЕ 2: Использование Canvas для сжатия фото, чтобы избежать лимитов Firebase
 document.getElementById('hidden-photo-input').addEventListener('change', function(e) {
   var file = e.target.files[0];
   if (!file) return;
   var reader = new FileReader();
   reader.onload = function(event) {
-    var base64Img = event.target.result;
-    for (var i = 0; i < players.length; i++) {
-      if (players[i].id === photoTargetPlayerId) {
-        players[i].photo = base64Img;
-        break;
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var MAX_WIDTH = 300;
+      var MAX_HEIGHT = 300;
+      var width = img.width;
+      var height = img.height;
+
+      // Вычисляем новые пропорции (не более 300x300)
+      if (width > height) {
+        if (width > MAX_WIDTH) {
+          height *= MAX_WIDTH / width;
+          width = MAX_WIDTH;
+        }
+      } else {
+        if (height > MAX_HEIGHT) {
+          width *= MAX_HEIGHT / height;
+          height = MAX_HEIGHT;
+        }
       }
-    }
-    savePlayersToDB();
+      
+      canvas.width = width;
+      canvas.height = height;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // Сжимаем изображение в формат JPEG с качеством 80%
+      var dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+      for (var i = 0; i < players.length; i++) {
+        if (players[i].id === photoTargetPlayerId) {
+          players[i].photo = dataUrl;
+          break;
+        }
+      }
+      savePlayersToDB();
+    };
+    img.src = event.target.result;
   };
   reader.readAsDataURL(file);
 });
 
-// ОБНОВЛЕННАЯ ФУНКЦИЯ ПЕРЕКЛЮЧЕНИЯ СТРАНИЦ
 function switchPage(pageId) {
 const newIndex = pagesList.indexOf(pageId);
 if (newIndex === -1) return;
@@ -886,10 +920,8 @@ currentPageIndex = newIndex;
 pagesList.forEach(id => document.getElementById(id).classList.remove('active'));
 document.getElementById(pageId).classList.add('active');
 
-// Выполняем саму анимацию слайда
 document.getElementById('pages-wrapper').style.transform = `translateX(-${currentPageIndex * 33.3333}%)`;
 
-// ВЫЗОВ ОБНОВЛЕНИЯ НАВИГАЦИОННЫХ КАРТИНОК
 updateNavImages();
 
 var deckContainer = document.getElementById('version-deck-container');
@@ -903,7 +935,6 @@ closeSheet();
 closePlayerSelectorMenu();
 }
 
-// ЛОГИКА ОБРАБОТКИ СВАЙПОВ (TOUCH EVENTS)
 const pagesWrapper = document.getElementById('pages-wrapper');
 
 pagesWrapper.addEventListener('touchstart', function(e) {
@@ -977,7 +1008,6 @@ isDeckExpanded = false;
 }
 });
 
-// ИНИЦИАЛИЗАЦИЯ ИКОНОК ПРИ ПЕРВОЙ ЗАГРУЗКЕ
 updateNavImages();
 </script>
 </body>
